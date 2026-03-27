@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Kalori & Vesi</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: #2e2e2e;
+    --text: #f0ede8;
+    --muted: #666;
+    --accent: #c8f060;
+    --accent2: #60c8f0;
+    --accent3: #f0a060;
+    --red: #f06060;
+    --accent4: #a0f0c0;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 100px;
+  }
+
+  .header {
+    padding: 20px 16px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-title { font-size: 11px; font-family: 'Space Mono', monospace; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; }
+  .header-date { font-size: 22px; font-weight: 800; line-height: 1; margin-top: 2px; }
+  .header-nav { display: flex; gap: 6px; align-items: center; }
+  .nav-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+
+  /* SUMMARY RING */
+  .summary { padding: 20px 16px; display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center; }
+  .ring-wrap { position: relative; width: 110px; height: 110px; }
+  .ring-svg { width: 110px; height: 110px; transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--surface2); stroke-width: 8; }
+  .ring-fill { fill: none; stroke: var(--accent); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.6s cubic-bezier(.4,0,.2,1); }
+  .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+  .ring-kcal { font-size: 22px; font-weight: 800; color: var(--accent); }
+  .ring-label { font-size: 9px; font-family: 'Space Mono', monospace; color: var(--muted); letter-spacing: 0.1em; margin-top: 2px; }
+  .summary-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
+  .stat-val { font-size: 18px; font-weight: 800; line-height: 1; }
+  .stat-lbl { font-size: 9px; font-family: 'Space Mono', monospace; color: var(--muted); letter-spacing: 0.08em; margin-top: 3px; }
+  .stat-box.water .stat-val { color: var(--accent2); }
+  .stat-box.protein .stat-val { color: var(--accent3); }
+  .stat-box.goal { grid-column: 1/-1; }
+  .goal-bar-bg { width: 100%; height: 4px; background: var(--surface2); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+  .goal-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); border-radius: 2px; transition: width 0.5s ease; }
+
+  /* WATER */
+  .section { padding: 0 16px 16px; }
+  .section-title { font-size: 10px; font-family: 'Space Mono', monospace; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px; }
+  .water-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .water-btn { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--accent2); padding: 12px 6px; cursor: pointer; text-align: center; transition: all 0.15s; font-family: 'Syne', sans-serif; }
+  .water-btn:active { background: rgba(96,200,240,0.15); border-color: var(--accent2); transform: scale(0.96); }
+  .water-btn .wval { font-size: 16px; font-weight: 800; line-height: 1; }
+  .water-btn .wlbl { font-size: 9px; color: var(--muted); margin-top: 2px; font-family: 'Space Mono', monospace; }
+  .water-icon { font-size: 18px; margin-bottom: 2px; }
+
+  /* ADD FOOD BUTTONS */
+  .add-food-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .add-food-btn { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 10px; cursor: pointer; text-align: center; font-family: 'Syne', sans-serif; transition: all 0.15s; }
+  .add-food-btn:active { transform: scale(0.97); }
+  .add-food-btn.photo { border-color: rgba(200,240,96,0.3); }
+  .add-food-btn.photo:active { background: rgba(200,240,96,0.08); }
+  .add-food-btn.barcode { border-color: rgba(96,200,240,0.3); }
+  .add-food-btn.barcode:active { background: rgba(96,200,240,0.08); }
+  .afb-icon { font-size: 28px; margin-bottom: 6px; }
+  .afb-title { font-size: 13px; font-weight: 700; }
+  .afb-sub { font-size: 10px; color: var(--muted); font-family: 'Space Mono', monospace; margin-top: 3px; }
+
+  /* PHOTO PANEL */
+  .panel { display: none; }
+  .panel.visible { display: block; }
+  .camera-area { background: var(--surface); border: 1.5px dashed var(--border); border-radius: var(--radius); padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+  .camera-area.has-image { border-style: solid; border-color: var(--border); padding: 0; }
+  #preview-img { width: 100%; max-height: 220px; object-fit: cover; border-radius: calc(var(--radius) - 2px); display: none; }
+  .camera-placeholder { pointer-events: none; }
+  .camera-icon { font-size: 36px; margin-bottom: 8px; }
+  .camera-text { font-size: 14px; font-weight: 600; }
+  .camera-sub { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: 'Space Mono', monospace; }
+  #file-input { display: none; }
+
+  .analyze-btn { width: 100%; background: var(--accent); color: #0f0f0f; border: none; border-radius: var(--radius); padding: 14px; font-size: 14px; font-weight: 800; font-family: 'Syne', sans-serif; cursor: pointer; margin-top: 10px; display: none; letter-spacing: 0.05em; transition: all 0.15s; }
+  .analyze-btn:active { transform: scale(0.98); opacity: 0.9; }
+  .analyze-btn.loading { background: var(--surface2); color: var(--muted); pointer-events: none; }
+
+  /* BARCODE PANEL */
+  .barcode-video-wrap { position: relative; border-radius: var(--radius); overflow: hidden; background: #000; width: 100%; aspect-ratio: 4/3; }
+  #barcode-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .scan-line { position: absolute; left: 10%; right: 10%; height: 2px; background: var(--accent); top: 50%; transform: translateY(-50%); box-shadow: 0 0 8px var(--accent); animation: scanmove 2s ease-in-out infinite; }
+  @keyframes scanmove { 0%,100% { top: 30%; } 50% { top: 70%; } }
+  .scan-overlay { position: absolute; inset: 0; border: 2px solid rgba(200,240,96,0.2); border-radius: var(--radius); pointer-events: none; }
+  .scan-corner { position: absolute; width: 20px; height: 20px; border-color: var(--accent); border-style: solid; }
+  .sc-tl { top: 12px; left: 12px; border-width: 2px 0 0 2px; }
+  .sc-tr { top: 12px; right: 12px; border-width: 2px 2px 0 0; }
+  .sc-bl { bottom: 12px; left: 12px; border-width: 0 0 2px 2px; }
+  .sc-br { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; }
+  .barcode-status { text-align: center; padding: 10px; font-size: 12px; font-family: 'Space Mono', monospace; color: var(--muted); }
+  .stop-scan-btn { width: 100%; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); padding: 11px; font-size: 13px; font-weight: 700; font-family: 'Syne', sans-serif; color: var(--muted); cursor: pointer; margin-top: 8px; }
+
+  /* MANUAL BARCODE INPUT */
+  .manual-barcode-row { display: flex; gap: 8px; margin-top: 10px; }
+  .manual-barcode-row input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 13px; padding: 10px 12px; outline: none; }
+  .manual-barcode-row input:focus { border-color: var(--accent2); }
+  .manual-barcode-row button { background: var(--accent2); color: #0f0f0f; border: none; border-radius: 8px; padding: 10px 16px; font-weight: 800; font-family: 'Syne', sans-serif; font-size: 13px; cursor: pointer; white-space: nowrap; }
+
+  /* PRODUCT CARD */
+  .product-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-top: 10px; display: none; }
+  .product-card.visible { display: block; }
+  .product-header { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+  .product-img { width: 56px; height: 56px; border-radius: 8px; object-fit: contain; background: var(--surface2); flex-shrink: 0; }
+  .product-name { font-size: 14px; font-weight: 700; line-height: 1.3; }
+  .product-brand { font-size: 11px; color: var(--muted); font-family: 'Space Mono', monospace; margin-top: 3px; }
+  .product-per { font-size: 10px; color: var(--accent2); font-family: 'Space Mono', monospace; margin-top: 4px; }
+
+  /* PORTION SLIDER */
+  .portion-wrap { background: var(--surface2); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+  .portion-label { font-size: 10px; font-family: 'Space Mono', monospace; color: var(--muted); letter-spacing: 0.08em; margin-bottom: 8px; }
+  .portion-row { display: flex; align-items: center; gap: 10px; }
+  .portion-row input[type=range] { flex: 1; accent-color: var(--accent); height: 4px; }
+  .portion-val { font-size: 18px; font-weight: 800; color: var(--accent); width: 60px; text-align: right; font-family: 'Space Mono', monospace; }
+  .portion-macros { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-top: 10px; }
+  .pm-box { background: var(--surface); border-radius: 8px; padding: 8px 4px; text-align: center; }
+  .pm-val { font-size: 15px; font-weight: 800; }
+  .pm-lbl { font-size: 8px; font-family: 'Space Mono', monospace; color: var(--muted); margin-top: 2px; }
+  .pm-box.k .pm-val { color: var(--accent); }
+  .pm-box.p .pm-val { color: var(--accent3); }
+  .pm-box.c .pm-val { color: var(--accent2); }
+  .pm-box.f .pm-val { color: #c0a0f0; }
+
+  /* RESULT CARD (photo) */
+  .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-top: 10px; display: none; }
+  .result-card.visible { display: block; }
+  .result-title { font-size: 12px; font-family: 'Space Mono', monospace; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 12px; }
+  .result-macros { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 14px; }
+  .macro-box { background: var(--surface2); border-radius: 8px; padding: 10px 6px; text-align: center; }
+  .macro-val { font-size: 18px; font-weight: 800; line-height: 1; }
+  .macro-lbl { font-size: 8px; font-family: 'Space Mono', monospace; color: var(--muted); margin-top: 3px; letter-spacing: 0.05em; }
+  .macro-box.kcal .macro-val { color: var(--accent); }
+  .macro-box.prot .macro-val { color: var(--accent3); }
+  .macro-box.carb .macro-val { color: var(--accent2); }
+  .macro-box.fat .macro-val { color: #c0a0f0; }
+  .macro-box.fiber .macro-val { color: var(--accent4); }
+  .pm-box.fi .pm-val { color: var(--accent4); }
+  .result-desc { font-size: 13px; line-height: 1.5; color: #bbb; margin-bottom: 14px; }
+  .confidence-badge { display: inline-block; font-size: 9px; font-family: 'Space Mono', monospace; padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
+  .conf-high { background: rgba(200,240,96,0.15); color: var(--accent); }
+  .conf-mid { background: rgba(240,160,96,0.15); color: var(--accent3); }
+  .conf-low { background: rgba(240,96,96,0.15); color: var(--red); }
+
+  .result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .action-btn { border-radius: 8px; padding: 10px; font-size: 12px; font-weight: 700; font-family: 'Syne', sans-serif; cursor: pointer; border: 1px solid var(--border); transition: all 0.15s; }
+  .action-btn:active { transform: scale(0.97); }
+  .action-btn.confirm { background: var(--accent); color: #0f0f0f; border-color: var(--accent); }
+  .action-btn.discard { background: transparent; color: var(--muted); }
+
+  /* LOG */
+  .log-list { display: flex; flex-direction: column; gap: 6px; }
+  .log-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+  .log-thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--surface2); }
+  .log-thumb-icon { width: 40px; height: 40px; border-radius: 8px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .log-info { flex: 1; min-width: 0; }
+  .log-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .log-time { font-size: 10px; font-family: 'Space Mono', monospace; color: var(--muted); margin-top: 2px; }
+  .log-kcal { font-size: 14px; font-weight: 800; color: var(--accent); flex-shrink: 0; }
+  .log-water-ml { font-size: 14px; font-weight: 800; color: var(--accent2); flex-shrink: 0; }
+  .log-del { background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px; flex-shrink: 0; }
+  .empty-log { text-align: center; padding: 30px 0; color: var(--muted); font-size: 12px; font-family: 'Space Mono', monospace; }
+
+  /* SETTINGS */
+  .apikey-lbl { font-size: 9px; font-family: 'Space Mono', monospace; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 6px; }
+  .apikey-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .apikey-bar input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 11px; padding: 8px 10px; outline: none; }
+  .apikey-bar input:focus { border-color: var(--accent); }
+  .apikey-save { background: var(--accent); color: #0f0f0f; border: none; border-radius: 8px; padding: 8px 14px; font-weight: 700; font-size: 12px; font-family: 'Syne', sans-serif; cursor: pointer; white-space: nowrap; }
+  .goal-edit { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+  .goal-edit input { width: 80px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 13px; padding: 6px 10px; outline: none; font-weight: 700; }
+  .goal-edit input:focus { border-color: var(--accent); }
+  .goal-edit-lbl { font-size: 11px; color: var(--muted); }
+  .goal-edit-save { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--accent); font-size: 11px; font-family: 'Space Mono', monospace; padding: 6px 10px; cursor: pointer; }
+
+  /* TABS */
+  .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); border-top: 1px solid var(--border); display: flex; padding: 8px 0 20px; z-index: 100; }
+  .tab-btn { flex: 1; background: none; border: none; color: var(--muted); font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.08em; cursor: pointer; padding: 6px 0; display: flex; flex-direction: column; align-items: center; gap: 3px; transition: color 0.15s; }
+  .tab-btn .tab-icon { font-size: 20px; }
+  .tab-btn.active { color: var(--accent); }
+  .tab-page { display: none; }
+  .tab-page.active { display: block; }
+
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 8px 20px; font-size: 12px; font-family: 'Space Mono', monospace; color: var(--text); z-index: 200; opacity: 0; transition: opacity 0.2s; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+  hr.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  .source-badge { display: inline-block; font-size: 8px; font-family: 'Space Mono', monospace; padding: 2px 6px; border-radius: 10px; margin-left: 4px; vertical-align: middle; }
+  .src-off { background: rgba(96,200,240,0.15); color: var(--accent2); }
+  .src-ai { background: rgba(200,240,96,0.15); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">KALORI & VESI</div>
+    <div class="header-date" id="header-date"></div>
+  </div>
+  <div class="header-nav">
+    <button class="nav-btn" onclick="changeDay(-1)">‹</button>
+    <button class="nav-btn" onclick="changeDay(1)">›</button>
+  </div>
+</div>
+
+<!-- TODAY -->
+<div id="page-today" class="tab-page active">
+
+  <div class="summary">
+    <div class="ring-wrap">
+      <svg class="ring-svg" viewBox="0 0 110 110">
+        <circle class="ring-bg" cx="55" cy="55" r="46"/>
+        <circle class="ring-fill" id="ring-fill" cx="55" cy="55" r="46" stroke-dasharray="289" stroke-dashoffset="289"/>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-kcal" id="ring-kcal">0</div>
+        <div class="ring-label">KCAL</div>
+      </div>
+    </div>
+    <div class="summary-stats">
+      <div class="stat-box water">
+        <div class="stat-val" id="stat-water">0</div>
+        <div class="stat-lbl">VESI ML</div>
+      </div>
+      <div class="stat-box protein">
+        <div class="stat-val" id="stat-protein">0g</div>
+        <div class="stat-lbl">VALK</div>
+      </div>
+      <div class="stat-box" style="--fiber-color:var(--accent4)">
+        <div class="stat-val" id="stat-fiber" style="color:var(--accent4)">0g</div>
+        <div class="stat-lbl">KIUD / <span id="fiber-goal-display">30</span>g</div>
+        <div class="goal-bar-bg" style="margin-top:6px">
+          <div class="goal-bar-fill" id="fiber-bar" style="width:0%;background:var(--accent4)"></div>
+        </div>
+      </div>
+      <div class="stat-box goal">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="stat-val" id="stat-goal-pct">0%</div>
+            <div class="stat-lbl">EESMÄRK (<span id="goal-display">2000</span> kcal)</div>
+          </div>
+          <button onclick="toggleGoalEdit()" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer">✏️</button>
+        </div>
+        <div id="goal-edit-wrap" style="display:none">
+          <div class="goal-edit">
+            <input type="number" id="goal-input" value="2000" min="500" max="5000">
+            <span class="goal-edit-lbl">kcal</span>
+            <button class="goal-edit-save" onclick="saveGoal()">Salvesta</button>
+          </div>
+        </div>
+        <div class="goal-bar-bg">
+          <div class="goal-bar-fill" id="goal-bar" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WATER -->
+  <div class="section">
+    <div class="section-title">💧 Lisa vesi / jook</div>
+    <div class="water-btns">
+      <button class="water-btn" onclick="addWater(50,'💧','Vesi')" style="border-color:rgba(96,200,240,0.4)">
+        <div class="water-icon">💧</div><div class="wval">+50</div><div class="wlbl">ml vesi</div>
+      </button>
+      <button class="water-btn" onclick="addWater(100,'💧','Vesi')" style="border-color:rgba(96,200,240,0.4)">
+        <div class="water-icon">🥤</div><div class="wval">+100</div><div class="wlbl">ml vesi</div>
+      </button>
+      <button class="water-btn" onclick="addWater(100,'☕','Kohv')">
+        <div class="water-icon">☕</div><div class="wval">+100</div><div class="wlbl">ml kohv</div>
+      </button>
+      <button class="water-btn" onclick="togglePanel('drink')" style="color:var(--muted)">
+        <div class="water-icon">🔍</div><div class="wval">muu</div><div class="wlbl">jook</div>
+      </button>
+    </div>
+
+    <!-- DRINK SEARCH PANEL -->
+    <div class="panel" id="panel-drink" style="margin-top:10px">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="drink-search-input" placeholder="nt &quot;täispiim&quot;, &quot;apelsinimahl&quot;..."
+          style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Syne',sans-serif;font-size:13px;padding:10px 12px;outline:none"
+          onkeydown="if(event.key==='Enter')searchDrink()"
+          onfocus="this.style.borderColor='var(--accent2)'" onblur="this.style.borderColor='var(--border)'">
+        <button onclick="searchDrink()" style="background:var(--accent2);color:#0f0f0f;border:none;border-radius:var(--radius);padding:10px 16px;font-weight:800;font-family:'Syne',sans-serif;font-size:13px;cursor:pointer">Otsi</button>
+      </div>
+      <div id="drink-search-status" style="font-size:11px;font-family:'Space Mono',monospace;color:var(--muted);padding:0 2px 6px">⚠️ Tekstiotsing vajab backend ühendust — kasuta hetkel barkoodi pakendatud jookidel</div>
+      <div id="drink-results" style="display:flex;flex-direction:column;gap:6px"></div>
+
+      <!-- DRINK CONFIRM CARD -->
+      <div id="drink-confirm-card" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:8px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:4px" id="drink-confirm-name"></div>
+        <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);margin-bottom:12px" id="drink-confirm-brand"></div>
+        <div class="portion-wrap">
+          <div class="portion-label">KOGUS</div>
+          <div class="portion-row">
+            <input type="range" id="drink-slider" min="25" max="500" value="200" step="25" oninput="updateDrinkPortion()">
+            <div class="portion-val"><span id="drink-ml">200</span>ml</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px">
+            <div class="pm-box k"><div class="pm-val" id="dp-kcal">—</div><div class="pm-lbl">KCAL</div></div>
+            <div class="pm-box p"><div class="pm-val" id="dp-prot">—</div><div class="pm-lbl">VALK</div></div>
+            <div class="pm-box" style=""><div class="pm-val" id="dp-water" style="color:var(--accent2)">—</div><div class="pm-lbl">💧 VESI ML</div></div>
+          </div>
+        </div>
+        <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);margin-bottom:10px" id="drink-water-note"></div>
+        <div class="result-actions">
+          <button class="action-btn confirm" onclick="confirmDrink()">✓ Lisa päeva</button>
+          <button class="action-btn discard" onclick="discardDrink()">✕ Tühista</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD FOOD -->
+  <div class="section">
+    <div class="section-title">🍽️ Lisa toit</div>
+    <div class="add-food-row">
+      <button class="add-food-btn photo" onclick="togglePanel('photo')">
+        <div class="afb-icon">📷</div>
+        <div class="afb-title">Foto</div>
+        <div class="afb-sub">AI hindab kcal</div>
+      </button>
+      <button class="add-food-btn barcode" onclick="togglePanel('barcode')">
+        <div class="afb-icon">📦</div>
+        <div class="afb-title">Barkood</div>
+        <div class="afb-sub">täpsed andmed</div>
+      </button>
+    </div>
+
+    <!-- PHOTO PANEL -->
+    <div class="panel" id="panel-photo">
+      <div class="camera-area" id="camera-area" onclick="document.getElementById('file-input').click()">
+        <div class="camera-placeholder" id="camera-placeholder">
+          <div class="camera-icon">📷</div>
+          <div class="camera-text">Tee pilt toidust</div>
+          <div class="camera-sub">klõpsa siia</div>
+        </div>
+        <img id="preview-img" src="" alt="">
+      </div>
+      <input type="file" id="file-input" accept="image/*" capture="environment" onchange="onImageSelected(event)">
+      <textarea id="food-comment" placeholder="Lisa täpsustus (valikuline) — nt &quot;4 seemnesorti peale, ca 1 spl&quot;" style="width:100%;margin-top:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Syne',sans-serif;font-size:13px;padding:10px 12px;outline:none;resize:none;height:60px;display:none" oninput="this.style.borderColor=this.value?'var(--accent)':'var(--border)'"></textarea>
+      <button class="analyze-btn" id="analyze-btn" onclick="analyzeFood()">⚡ ANALÜÜSI TOIT</button>
+      <div class="result-card" id="result-card">
+        <div class="result-title">ANALÜÜSI TULEMUS <span class="source-badge src-ai">AI hinnang</span></div>
+        <div class="result-macros">
+          <div class="macro-box kcal"><div class="macro-val" id="res-kcal">—</div><div class="macro-lbl">KCAL</div></div>
+          <div class="macro-box prot"><div class="macro-val" id="res-prot">—</div><div class="macro-lbl">VALK g</div></div>
+          <div class="macro-box carb"><div class="macro-val" id="res-carb">—</div><div class="macro-lbl">SÜSIV g</div></div>
+          <div class="macro-box fat"><div class="macro-val" id="res-fat">—</div><div class="macro-lbl">RASV g</div></div>
+          <div class="macro-box fiber" style="grid-column:1/-1;background:rgba(160,240,192,0.07)"><div class="macro-val" id="res-fiber">—</div><div class="macro-lbl">KIUDAINED g</div></div>
+        </div>
+        <div class="result-desc" id="res-desc"></div>
+        <div class="result-actions">
+          <button class="action-btn confirm" onclick="confirmFood()">✓ Lisa päeva</button>
+          <button class="action-btn discard" onclick="discardFood()">✕ Tühista</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BARCODE PANEL -->
+    <div class="panel" id="panel-barcode">
+      <div class="barcode-video-wrap" id="barcode-video-wrap" style="display:none">
+        <div id="barcode-scanner-container" style="width:100%;height:100%;position:relative"></div>
+        <div class="scan-line"></div>
+        <div class="scan-overlay">
+          <div class="scan-corner sc-tl"></div>
+          <div class="scan-corner sc-tr"></div>
+          <div class="scan-corner sc-bl"></div>
+          <div class="scan-corner sc-br"></div>
+        </div>
+      </div>
+      <div class="barcode-status" id="barcode-status"></div>
+      <button id="start-scan-btn" onclick="startScan()" style="width:100%;background:var(--accent2);color:#0f0f0f;border:none;border-radius:var(--radius);padding:13px;font-size:14px;font-weight:800;font-family:'Syne',sans-serif;cursor:pointer;letter-spacing:0.04em">
+        📷 Skanni barkood
+      </button>
+      <button class="stop-scan-btn" id="stop-scan-btn" onclick="stopScan()" style="display:none">✕ Peata skann</button>
+
+      <div style="margin-top:10px">
+        <div class="section-title" style="margin-bottom:6px">Või sisesta käsitsi</div>
+        <div class="manual-barcode-row">
+          <input type="number" id="manual-barcode" placeholder="4740098012345">
+          <button onclick="lookupBarcode(document.getElementById('manual-barcode').value)">Otsi</button>
+        </div>
+      </div>
+
+      <!-- PRODUCT CARD -->
+      <div class="product-card" id="product-card">
+        <div class="product-header">
+          <img class="product-img" id="prod-img" src="" alt="" onerror="this.style.display='none'">
+          <div>
+            <div class="product-name" id="prod-name"></div>
+            <div class="product-brand" id="prod-brand"></div>
+            <div class="product-per">toiteväärtus / 100g</div>
+          </div>
+        </div>
+        <div class="portion-wrap">
+          <div class="portion-label">PORTSJONI SUURUS</div>
+          <div class="portion-row">
+            <input type="range" id="portion-slider" min="10" max="500" value="100" step="5" oninput="updatePortion()">
+            <div class="portion-val"><span id="portion-g">100</span>g</div>
+          </div>
+          <div class="portion-macros">
+            <div class="pm-box k"><div class="pm-val" id="pm-kcal">—</div><div class="pm-lbl">KCAL</div></div>
+            <div class="pm-box p"><div class="pm-val" id="pm-prot">—</div><div class="pm-lbl">VALK</div></div>
+            <div class="pm-box c"><div class="pm-val" id="pm-carb">—</div><div class="pm-lbl">SÜSIV</div></div>
+            <div class="pm-box f"><div class="pm-val" id="pm-fat">—</div><div class="pm-lbl">RASV</div></div>
+            <div class="pm-box fi" style="grid-column:1/-1;background:rgba(160,240,192,0.07)"><div class="pm-val" id="pm-fiber">—</div><div class="pm-lbl">KIUDAINED</div></div>
+          </div>
+        </div>
+        <div class="result-actions">
+          <button class="action-btn confirm" onclick="confirmBarcode()">✓ Lisa päeva</button>
+          <button class="action-btn discard" onclick="discardBarcode()">✕ Tühista</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOG -->
+  <div class="section">
+    <div class="section-title">📋 Tänane logi</div>
+    <div class="log-list" id="log-list"></div>
+  </div>
+
+</div><!-- /page-today -->
+
+<!-- HISTORY -->
+<div id="page-history" class="tab-page">
+  <div style="padding:20px 16px 0">
+    <div class="header-title" style="margin-bottom:16px">📈 AJALUGU (14 päeva)</div>
+    <div id="history-list" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="page-settings" class="tab-page">
+  <div style="padding:20px 16px 0">
+    <div class="header-title" style="margin-bottom:16px">⚙️ SEADED</div>
+    <div class="apikey-lbl">ANTHROPIC API VÕTI (foto analüüsiks)</div>
+    <div class="apikey-bar">
+      <input type="password" id="apikey-input" placeholder="sk-ant-...">
+      <button class="apikey-save" onclick="saveApiKey()">Salvesta</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;padding:0 4px;line-height:1.6;margin-bottom:16px">
+      Vajatakse ainult foto analüüsiks. Barkood töötab ilma.<br>
+      Loo võti: <span style="color:var(--accent2)">console.anthropic.com</span>
+    </div>
+    <hr class="divider">
+    <div class="apikey-lbl" style="margin-bottom:10px">EESMÄRGID</div>
+    <div style="display:grid;gap:10px">
+      <div class="stat-box">
+        <div class="stat-lbl" style="margin-bottom:6px">KALORI EESMÄRK</div>
+        <div class="goal-edit">
+          <input type="number" id="goal-input2" value="2000" min="500" max="5000">
+          <span class="goal-edit-lbl">kcal</span>
+          <button class="goal-edit-save" onclick="saveGoal()">Salvesta</button>
+        </div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl" style="margin-bottom:6px">VESI EESMÄRK</div>
+        <div class="goal-edit">
+          <input type="number" id="water-goal-input" value="2500" min="500" max="6000">
+          <span class="goal-edit-lbl">ml</span>
+          <button class="goal-edit-save" onclick="saveWaterGoal()">Salvesta</button>
+        </div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl" style="margin-bottom:6px">KIUDAINE EESMÄRK</div>
+        <div class="goal-edit">
+          <input type="number" id="fiber-goal-input" value="30" min="10" max="80">
+          <span class="goal-edit-lbl">g</span>
+          <button class="goal-edit-save" onclick="saveFiberGoal()">Salvesta</button>
+        </div>
+      </div>
+    </div>
+    <hr class="divider">
+    <button onclick="clearToday()" style="width:100%;background:rgba(240,96,96,0.1);border:1px solid rgba(240,96,96,0.3);color:var(--red);border-radius:var(--radius);padding:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer">
+      🗑️ Kustuta tänane logi
+    </button>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" id="tab-today" onclick="switchTab('today')"><span class="tab-icon">🏠</span><span>TÄNA</span></button>
+  <button class="tab-btn" id="tab-history" onclick="switchTab('history')"><span class="tab-icon">📊</span><span>AJALUGU</span></button>
+  <button class="tab-btn" id="tab-settings" onclick="switchTab('settings')"><span class="tab-icon">⚙️</span><span>SEADED</span></button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+let dayOffset = 0;
+let currentDate = getTodayKey();
+let pendingPhotoResult = null;
+let pendingImageDataUrl = null;
+let pendingProduct = null;
+let scanning = false;
+let activePanel = null;
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+function getTodayKey() {
+  return new Date().toISOString().slice(0,10);
+}
+function timeNow() {
+  return new Date().toLocaleTimeString('et-EE', {hour:'2-digit', minute:'2-digit'});
+}
+function formatDate(key) {
+  const [,m,d] = key.split('-');
+  const wd = new Date(key).getDay();
+  const names = ['P','E','T','K','N','R','L'];
+  const months = ['jaan','veebr','märts','apr','mai','juuni','juuli','aug','sept','okt','nov','dets'];
+  const today = getTodayKey();
+  if (key === today) return 'Täna, ' + parseInt(d) + '. ' + months[parseInt(m)-1];
+  return names[wd] + ' ' + parseInt(d) + '. ' + months[parseInt(m)-1];
+}
+function round1(n) { return Math.round(n * 10) / 10; }
+
+// ── STORAGE ────────────────────────────────────────────────────────────────
+function getLog(k) { try { return JSON.parse(localStorage.getItem('log_'+k)||'[]'); } catch { return []; } }
+function saveLog(k,l) { localStorage.setItem('log_'+k, JSON.stringify(l)); }
+function getSettings() { try { return JSON.parse(localStorage.getItem('kv_settings')||'{}'); } catch { return {}; } }
+function saveSettings(s) { localStorage.setItem('kv_settings', JSON.stringify(s)); }
+
+// ── DAY NAV ────────────────────────────────────────────────────────────────
+function changeDay(d) {
+  dayOffset += d;
+  if (dayOffset > 0) dayOffset = 0;
+  const dt = new Date();
+  dt.setDate(dt.getDate() + dayOffset);
+  currentDate = dt.toISOString().slice(0,10);
+  render();
+}
+
+// ── TABS ───────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  ['today','history','settings'].forEach(t => {
+    document.getElementById('page-'+t).classList.toggle('active', t===tab);
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  });
+  if (tab==='history') renderHistory();
+}
+
+// ── PANELS ─────────────────────────────────────────────────────────────────
+function togglePanel(name) {
+  if (activePanel === name) {
+    document.getElementById('panel-'+name).classList.remove('visible');
+    if (name==='barcode') stopScan();
+    activePanel = null;
+  } else {
+    ['photo','barcode','drink'].forEach(p => document.getElementById('panel-'+p).classList.remove('visible'));
+    stopScan();
+    document.getElementById('panel-'+name).classList.add('visible');
+    activePanel = name;
+    if (name==='drink') setTimeout(()=>document.getElementById('drink-search-input').focus(), 100);
+  }
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────
+function render() {
+  const s = getSettings();
+  const kcalGoal = s.kcalGoal || 2000;
+
+  document.getElementById('header-date').textContent = formatDate(currentDate);
+  document.getElementById('goal-display').textContent = kcalGoal;
+  document.getElementById('goal-input').value = kcalGoal;
+  document.getElementById('goal-input2').value = kcalGoal;
+  document.getElementById('water-goal-input').value = s.waterGoal || 2500;
+
+  const log = getLog(currentDate);
+  let totalKcal=0, totalWater=0, totalProtein=0, totalFiber=0;
+  log.forEach(item => {
+    if (item.type==='food') { totalKcal += item.kcal; totalProtein += (item.protein||0); totalFiber += (item.fiber||0); }
+    if (item.type==='water') totalWater += item.ml;
+  });
+
+  document.getElementById('ring-kcal').textContent = totalKcal;
+  document.getElementById('stat-water').textContent = totalWater;
+  document.getElementById('stat-protein').textContent = totalProtein + 'g';
+  document.getElementById('stat-fiber').textContent = round1(totalFiber) + 'g';
+  const fiberGoal = s.fiberGoal || 30;
+  document.getElementById('fiber-goal-display').textContent = fiberGoal;
+  document.getElementById('fiber-goal-input') && (document.getElementById('fiber-goal-input').value = fiberGoal);
+  const fiberPct = Math.min(100, Math.round(totalFiber/fiberGoal*100));
+  document.getElementById('fiber-bar').style.width = fiberPct + '%';
+  const pct = Math.min(100, Math.round(totalKcal/kcalGoal*100));
+  document.getElementById('stat-goal-pct').textContent = pct + '%';
+  document.getElementById('goal-bar').style.width = pct + '%';
+  const circ = 289;
+  document.getElementById('ring-fill').style.strokeDashoffset = circ - (circ * Math.min(1, totalKcal/kcalGoal));
+
+  // api key placeholder
+  if (s.apiKey) document.getElementById('apikey-input').placeholder = '✓ Salvestatud (' + s.apiKey.slice(0,8) + '...)';
+
+  // log
+  const ll = document.getElementById('log-list');
+  if (!log.length) { ll.innerHTML = '<div class="empty-log">veel midagi logitud ei ole</div>'; return; }
+  ll.innerHTML = log.slice().reverse().map((item,ri) => {
+    const i = log.length-1-ri;
+    if (item.type==='food') {
+      const src = item.source==='barcode'
+        ? `<span class="source-badge src-off">OFF</span>`
+        : `<span class="source-badge src-ai">AI</span>`;
+      const thumb = item.img
+        ? `<img class="log-thumb" src="${item.img}">`
+        : `<div class="log-thumb-icon">🍽️</div>`;
+      return `<div class="log-item">${thumb}<div class="log-info"><div class="log-name">${item.name}${src}</div><div class="log-time">${item.time}</div></div><div class="log-kcal">${item.kcal}</div><button class="log-del" onclick="deleteEntry(${i})">×</button></div>`;
+    } else {
+      return `<div class="log-item"><div class="log-thumb-icon">${item.icon||'💧'}</div><div class="log-info"><div class="log-name">${item.label}</div><div class="log-time">${item.time}</div></div><div class="log-water-ml">${item.ml}ml</div><button class="log-del" onclick="deleteEntry(${i})">×</button></div>`;
+    }
+  }).join('');
+}
+
+function renderHistory() {
+  const hl = document.getElementById('history-list');
+  const s = getSettings();
+  const kcalGoal = s.kcalGoal || 2000;
+  const days = Array.from({length:14}, (_,i) => { const d=new Date(); d.setDate(d.getDate()-i); return d.toISOString().slice(0,10); });
+  hl.innerHTML = days.map(key => {
+    const log = getLog(key);
+    let kcal=0, water=0;
+    log.forEach(item => { if(item.type==='food') kcal+=item.kcal; if(item.type==='water') water+=item.ml; });
+    const pct = Math.min(100, Math.round(kcal/kcalGoal*100));
+    const isToday = key===getTodayKey();
+    return `<div style="background:var(--surface);border:1px solid ${isToday?'var(--accent)':'var(--border)'};border-radius:var(--radius);padding:12px 14px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:600">${formatDate(key)}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--accent)">${kcal} kcal</div>
+      </div>
+      <div style="background:var(--surface2);height:4px;border-radius:2px;overflow:hidden;margin-bottom:6px">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px"></div>
+      </div>
+      <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted)">💧 ${water}ml · ${pct}% eesmärgist</div>
+    </div>`;
+  }).join('');
+}
+
+// ── WATER ──────────────────────────────────────────────────────────────────
+function promptCustomWater() {
+  const ml = parseInt(prompt('Sisesta kogus (ml):'));
+  if (!ml || ml < 10 || ml > 2000) return;
+  addWater(ml, '💧', 'Vesi');
+}
+function addWater(ml, icon, label) {
+  const log = getLog(currentDate);
+  log.push({type:'water', ml, icon, label: label+' '+ml+'ml', time: timeNow()});
+  saveLog(currentDate, log);
+  render();
+  toast(icon + ' +'+ml+'ml lisatud');
+}
+
+// ── PHOTO ──────────────────────────────────────────────────────────────────
+function onImageSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    pendingImageDataUrl = ev.target.result;
+    document.getElementById('preview-img').src = pendingImageDataUrl;
+    document.getElementById('preview-img').style.display = 'block';
+    document.getElementById('camera-placeholder').style.display = 'none';
+    document.getElementById('camera-area').classList.add('has-image');
+    document.getElementById('analyze-btn').style.display = 'block';
+    document.getElementById('food-comment').style.display = 'block';
+    document.getElementById('result-card').classList.remove('visible');
+    pendingPhotoResult = null;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+async function analyzeFood() {
+  const s = getSettings();
+  if (!s.apiKey) { toast('⚠️ Lisa API võti Seadetes!'); switchTab('settings'); return; }
+  const btn = document.getElementById('analyze-btn');
+  btn.textContent = '⏳ Analüüsin...';
+  btn.classList.add('loading');
+
+  try {
+    const base64 = pendingImageDataUrl.split(',')[1];
+    const mediaType = pendingImageDataUrl.split(';')[0].split(':')[1];
+    const comment = document.getElementById('food-comment').value.trim();
+    const commentText = comment ? `\nKasutaja täpsustus: "${comment}"` : '';
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        messages: [{role:'user', content:[
+          {type:'image', source:{type:'base64', media_type:mediaType, data:base64}},
+          {type:'text', text:`Vaata toidupilti. Vasta AINULT JSON-ina (ilma markdown-ita):${commentText}
+{"name":"lühike nimi eesti keeles max 30 tähemärki","kcal":number,"protein":number,"carbs":number,"fat":number,"fiber":number,"confidence":"high|medium|low","description":"1-2 lauset eesti keeles max 120 tähemärki"}`}
+        ]}]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const result = JSON.parse(text);
+    pendingPhotoResult = result;
+
+    document.getElementById('res-kcal').textContent = result.kcal;
+    document.getElementById('res-prot').textContent = result.protein;
+    document.getElementById('res-carb').textContent = result.carbs;
+    document.getElementById('res-fat').textContent = result.fat;
+    document.getElementById('res-fiber').textContent = result.fiber ?? '?';
+    const confMap = {high:['conf-high','✓ täpne'],medium:['conf-mid','~ ligikaudne'],low:['conf-low','? ebakindel']};
+    const [cls,lbl] = confMap[result.confidence]||confMap.medium;
+    document.getElementById('res-desc').innerHTML = `<strong>${result.name}</strong> <span class="confidence-badge ${cls}">${lbl}</span><br><span style="font-size:12px">${result.description}</span>`;
+    document.getElementById('result-card').classList.add('visible');
+  } catch(err) {
+    toast('❌ Viga: ' + (err.message||'API ei vastanud'));
+  }
+  btn.textContent = '⚡ ANALÜÜSI UUESTI';
+  btn.classList.remove('loading');
+}
+
+function confirmFood() {
+  if (!pendingPhotoResult) return;
+  let thumb = null;
+  try {
+    const canvas = document.createElement('canvas');
+    const img = document.getElementById('preview-img');
+    const scale = 80/img.naturalWidth;
+    canvas.width=80; canvas.height=Math.round(img.naturalHeight*scale);
+    canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+    thumb = canvas.toDataURL('image/jpeg', 0.6);
+  } catch {}
+  const log = getLog(currentDate);
+  log.push({type:'food', source:'ai', name:pendingPhotoResult.name, kcal:pendingPhotoResult.kcal,
+    protein:pendingPhotoResult.protein, carbs:pendingPhotoResult.carbs, fat:pendingPhotoResult.fat,
+    fiber:pendingPhotoResult.fiber||0, img:thumb, time:timeNow()});
+  saveLog(currentDate, log);
+  discardFood();
+  render();
+  toast('✓ ' + pendingPhotoResult.name + ' lisatud!');
+}
+
+function discardFood() {
+  pendingPhotoResult = null; pendingImageDataUrl = null;
+  document.getElementById('preview-img').style.display='none';
+  document.getElementById('preview-img').src='';
+  document.getElementById('camera-placeholder').style.display='block';
+  document.getElementById('camera-area').classList.remove('has-image');
+  document.getElementById('analyze-btn').style.display='none';
+  document.getElementById('analyze-btn').textContent='⚡ ANALÜÜSI TOIT';
+  document.getElementById('food-comment').style.display='none';
+  document.getElementById('food-comment').value='';
+  document.getElementById('result-card').classList.remove('visible');
+}
+
+// ── BARCODE SCAN ───────────────────────────────────────────────────────────
+function startScan() {
+  if (scanning) return;
+  document.getElementById('barcode-video-wrap').style.display='block';
+  document.getElementById('start-scan-btn').style.display='none';
+  document.getElementById('stop-scan-btn').style.display='block';
+  document.getElementById('barcode-status').textContent='Suuna kaamera barkoodile...';
+
+  Quagga.init({
+    inputStream: {
+      name: 'Live',
+      type: 'LiveStream',
+      target: document.getElementById('barcode-scanner-container'),
+      constraints: { facingMode: 'environment', width: {ideal:1280}, height: {ideal:720} }
+    },
+    decoder: { readers: ['ean_reader','ean_8_reader','upc_reader','upc_e_reader'] },
+    locate: true
+  }, err => {
+    if (err) { toast('❌ Kaamera viga: ' + err.message); stopScan(); return; }
+    Quagga.start();
+    scanning = true;
+  });
+
+  Quagga.onDetected(result => {
+    const code = result.codeResult.code;
+    if (code) {
+      stopScan();
+      lookupBarcode(code);
+    }
+  });
+}
+
+function stopScan() {
+  if (scanning) { try { Quagga.stop(); } catch {} scanning = false; }
+  document.getElementById('barcode-video-wrap').style.display='none';
+  document.getElementById('start-scan-btn').style.display='block';
+  document.getElementById('stop-scan-btn').style.display='none';
+  document.getElementById('barcode-status').textContent='';
+}
+
+// ── OPEN FOOD FACTS ────────────────────────────────────────────────────────
+async function lookupBarcode(code) {
+  code = String(code).trim();
+  if (!code) return;
+  document.getElementById('barcode-status').textContent = '🔍 Otsin: ' + code + '...';
+  document.getElementById('product-card').classList.remove('visible');
+  pendingProduct = null;
+
+  try {
+    const resp = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+    const data = await resp.json();
+
+    if (data.status !== 1 || !data.product) {
+      document.getElementById('barcode-status').textContent = '❌ Toodet ei leitud (' + code + ')';
+      return;
+    }
+
+    const p = data.product;
+    const n = p.nutriments || {};
+
+    const per100 = {
+      kcal: Math.round(n['energy-kcal_100g'] || n['energy_100g']/4.184 || 0),
+      protein: round1(n.proteins_100g || 0),
+      carbs: round1(n.carbohydrates_100g || 0),
+      fat: round1(n.fat_100g || 0),
+      fiber: round1(n.fiber_100g || n['fiber-g_100g'] || 0)
+    };
+
+    pendingProduct = {
+      name: p.product_name || p.product_name_et || 'Tundmatu toode',
+      brand: p.brands || '',
+      img: p.image_small_url || p.image_url || '',
+      per100,
+      barcode: code
+    };
+
+    document.getElementById('prod-name').textContent = pendingProduct.name;
+    document.getElementById('prod-brand').textContent = pendingProduct.brand;
+    const prodImg = document.getElementById('prod-img');
+    if (pendingProduct.img) { prodImg.src=pendingProduct.img; prodImg.style.display='block'; }
+    else prodImg.style.display='none';
+
+    document.getElementById('portion-slider').value = 100;
+    document.getElementById('barcode-status').textContent = '';
+    updatePortion();
+    document.getElementById('product-card').classList.add('visible');
+
+  } catch(err) {
+    document.getElementById('barcode-status').textContent = '❌ Viga: ' + err.message;
+  }
+}
+
+function updatePortion() {
+  if (!pendingProduct) return;
+  const g = parseInt(document.getElementById('portion-slider').value);
+  document.getElementById('portion-g').textContent = g;
+  const f = g/100;
+  const p = pendingProduct.per100;
+  document.getElementById('pm-kcal').textContent = Math.round(p.kcal*f);
+  document.getElementById('pm-prot').textContent = round1(p.protein*f) + 'g';
+  document.getElementById('pm-carb').textContent = round1(p.carbs*f) + 'g';
+  document.getElementById('pm-fat').textContent = round1(p.fat*f) + 'g';
+  document.getElementById('pm-fiber').textContent = round1((p.fiber||0)*f) + 'g';
+}
+
+function confirmBarcode() {
+  if (!pendingProduct) return;
+  const g = parseInt(document.getElementById('portion-slider').value);
+  const f = g/100;
+  const p = pendingProduct.per100;
+  const log = getLog(currentDate);
+  log.push({
+    type: 'food', source: 'barcode',
+    name: pendingProduct.name + (pendingProduct.brand ? ' ('+pendingProduct.brand+')' : '') + ' ' + g + 'g',
+    kcal: Math.round(p.kcal*f),
+    protein: round1(p.protein*f),
+    carbs: round1(p.carbs*f),
+    fat: round1(p.fat*f),
+    fiber: round1((p.fiber||0)*f),
+    img: null,
+    time: timeNow()
+  });
+  saveLog(currentDate, log);
+  discardBarcode();
+  render();
+  toast('✓ ' + pendingProduct.name + ' lisatud!');
+}
+
+function discardBarcode() {
+  pendingProduct = null;
+  document.getElementById('product-card').classList.remove('visible');
+  document.getElementById('barcode-status').textContent='';
+  document.getElementById('manual-barcode').value='';
+}
+
+// ── DRINK SEARCH ───────────────────────────────────────────────────────────
+let pendingDrink = null;
+
+// Vee sisaldus joogiti (% mahust) — Open Food Facts ei anna seda alati
+const WATER_CONTENT = {
+  default: 0.9,      // teadmata joogid — konservatiivne
+  water: 1.0,
+  tea: 0.995,
+  coffee: 0.98,
+  milk: 0.87,
+  juice: 0.88,
+  smoothie: 0.85,
+  soda: 0.90,
+  beer: 0.92,
+  wine: 0.86,
+  kefir: 0.87,
+  yogurt: 0.85,
+};
+
+function guessWaterContent(name, category) {
+  const n = (name + ' ' + (category||'')).toLowerCase();
+  if (n.includes('piim') || n.includes('milk')) return WATER_CONTENT.milk;
+  if (n.includes('mahl') || n.includes('juice')) return WATER_CONTENT.juice;
+  if (n.includes('kohv') || n.includes('coffee')) return WATER_CONTENT.coffee;
+  if (n.includes('tee') || n.includes(' tea')) return WATER_CONTENT.tea;
+  if (n.includes('keefir') || n.includes('kefir')) return WATER_CONTENT.kefir;
+  if (n.includes('jogurt') || n.includes('yogurt')) return WATER_CONTENT.yogurt;
+  if (n.includes('smoothie')) return WATER_CONTENT.smoothie;
+  if (n.includes('õlu') || n.includes('beer') || n.includes('õl')) return WATER_CONTENT.beer;
+  if (n.includes('vein') || n.includes('wine')) return WATER_CONTENT.wine;
+  if (n.includes('limonaad') || n.includes('soda') || n.includes('cola')) return WATER_CONTENT.soda;
+  return WATER_CONTENT.default;
+}
+
+async function searchDrink() {
+  const q = document.getElementById('drink-search-input').value.trim();
+  if (!q) return;
+  const status = document.getElementById('drink-search-status');
+  const results = document.getElementById('drink-results');
+  status.textContent = '🔍 Otsin...';
+  results.innerHTML = '';
+  document.getElementById('drink-confirm-card').style.display = 'none';
+  pendingDrink = null;
+
+  try {
+    const resp = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=5&fields=product_name,brands,nutriments,categories_tags,image_small_url`);
+    const data = await resp.json();
+    const products = (data.products || []).filter(p => p.product_name && p.nutriments);
+
+    if (!products.length) { status.textContent = '❌ Ei leidnud midagi'; return; }
+    status.textContent = '';
+
+    results.innerHTML = products.map((p, i) => {
+      const n = p.nutriments;
+      const kcal = Math.round(n['energy-kcal_100g'] || n['energy_100g']/4.184 || 0);
+      return `<button onclick="selectDrink(${i})" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;text-align:left;cursor:pointer;width:100%;font-family:'Syne',sans-serif;transition:all 0.15s" onmousedown="this.style.background='var(--surface2)'">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${p.product_name}</div>
+        <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);margin-top:2px">${p.brands||''} · ${kcal} kcal/100ml</div>
+      </button>`;
+    }).join('');
+
+    // salvesta tulemused hilisemaks
+    window._drinkSearchResults = products;
+
+  } catch(err) {
+    status.textContent = '❌ Viga: ' + err.message;
+  }
+}
+
+function selectDrink(i) {
+  const p = window._drinkSearchResults[i];
+  const n = p.nutriments || {};
+  const waterPct = guessWaterContent(p.product_name, (p.categories_tags||[]).join(' '));
+
+  pendingDrink = {
+    name: p.product_name,
+    brand: p.brands || '',
+    per100: {
+      kcal: Math.round(n['energy-kcal_100g'] || n['energy_100g']/4.184 || 0),
+      protein: round1(n.proteins_100g || 0),
+      fat: round1(n.fat_100g || 0),
+      carbs: round1(n.carbohydrates_100g || 0),
+    },
+    waterPct
+  };
+
+  document.getElementById('drink-results').innerHTML = '';
+  document.getElementById('drink-confirm-name').textContent = p.product_name;
+  document.getElementById('drink-confirm-brand').textContent = p.brands || '';
+  document.getElementById('drink-slider').value = 200;
+  updateDrinkPortion();
+  document.getElementById('drink-confirm-card').style.display = 'block';
+}
+
+function updateDrinkPortion() {
+  if (!pendingDrink) return;
+  const ml = parseInt(document.getElementById('drink-slider').value);
+  document.getElementById('drink-ml').textContent = ml;
+  const f = ml / 100;
+  const p = pendingDrink.per100;
+  const waterMl = Math.round(ml * pendingDrink.waterPct);
+
+  document.getElementById('dp-kcal').textContent = Math.round(p.kcal * f);
+  document.getElementById('dp-prot').textContent = round1(p.protein * f) + 'g';
+  document.getElementById('dp-water').textContent = waterMl;
+
+  const pct = Math.round(pendingDrink.waterPct * 100);
+  document.getElementById('drink-water-note').textContent =
+    `~${pct}% veesisaldus — ${waterMl}ml läheb hüdratatsiooniarvestusse`;
+}
+
+function confirmDrink() {
+  if (!pendingDrink) return;
+  const ml = parseInt(document.getElementById('drink-slider').value);
+  const f = ml / 100;
+  const p = pendingDrink.per100;
+  const waterMl = Math.round(ml * pendingDrink.waterPct);
+  const kcal = Math.round(p.kcal * f);
+  const log = getLog(currentDate);
+
+  // vesi eraldi kirjega hüdratatsiooniks
+  if (waterMl > 0) {
+    log.push({type:'water', ml:waterMl, icon:'🥤', label: pendingDrink.name + ' (vesi)', time: timeNow()});
+  }
+  // kui on kaloreid, lisa ka toidukirjega
+  if (kcal > 0) {
+    log.push({type:'food', source:'drink', name: pendingDrink.name + ' ' + ml + 'ml',
+      kcal, protein: round1(p.protein*f), carbs: round1(p.carbs*f),
+      fat: round1(p.fat*f), fiber: 0, img: null, time: timeNow()});
+  }
+
+  saveLog(currentDate, log);
+  discardDrink();
+  render();
+  toast('✓ ' + pendingDrink.name + ' lisatud!');
+}
+
+function discardDrink() {
+  pendingDrink = null;
+  document.getElementById('drink-confirm-card').style.display = 'none';
+  document.getElementById('drink-results').innerHTML = '';
+  document.getElementById('drink-search-input').value = '';
+  document.getElementById('drink-search-status').textContent = '';
+}
+
+// ── SETTINGS ───────────────────────────────────────────────────────────────
+function saveApiKey() {
+  const k = document.getElementById('apikey-input').value.trim();
+  if (!k) { toast('Sisesta API võti'); return; }
+  const s = getSettings(); s.apiKey=k; saveSettings(s);
+  document.getElementById('apikey-input').value='';
+  document.getElementById('apikey-input').placeholder='✓ Salvestatud ('+k.slice(0,8)+'...)';
+  toast('✓ API võti salvestatud');
+}
+function saveGoal() {
+  const v = parseInt(document.getElementById('goal-input').value||document.getElementById('goal-input2').value);
+  if (!v||v<500) { toast('Sisesta korrektne väärtus'); return; }
+  const s = getSettings(); s.kcalGoal=v; saveSettings(s);
+  document.getElementById('goal-edit-wrap').style.display='none';
+  render(); toast('✓ Eesmärk '+v+' kcal salvestatud');
+}
+function saveWaterGoal() {
+  const v = parseInt(document.getElementById('water-goal-input').value);
+  if (!v||v<500) { toast('Sisesta korrektne väärtus'); return; }
+  const s = getSettings(); s.waterGoal=v; saveSettings(s);
+  toast('✓ Vesi eesmärk '+v+'ml salvestatud');
+}
+function saveFiberGoal() {
+  const v = parseInt(document.getElementById('fiber-goal-input').value);
+  if (!v||v<10) { toast('Sisesta korrektne väärtus'); return; }
+  const s = getSettings(); s.fiberGoal=v; saveSettings(s);
+  render(); toast('✓ Kiudaine eesmärk '+v+'g salvestatud');
+}
+function toggleGoalEdit() {
+  const w = document.getElementById('goal-edit-wrap');
+  w.style.display = w.style.display==='none'?'block':'none';
+}
+function clearToday() {
+  if (!confirm('Kustutad tänase logi?')) return;
+  saveLog(currentDate, []); render(); toast('🗑️ Logi kustutatud');
+}
+function deleteEntry(i) {
+  const log = getLog(currentDate); log.splice(i,1);
+  saveLog(currentDate,log); render();
+}
+function toast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+render();
+</script>
+</body>
+</html>
