@@ -226,6 +226,32 @@
   </div>
 </div>
 
+<!-- COST POPUP -->
+<div id="cost-popup" style="display:none;position:fixed;top:70px;right:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;z-index:300;min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,0.4)">
+  <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:0.1em;margin-bottom:12px">API KULUD</div>
+  <div style="display:grid;gap:8px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:var(--muted)">Päringuid</span>
+      <span style="font-size:14px;font-weight:700;font-family:'Space Mono',monospace" id="cost-requests">0</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:var(--muted)">Input tokenid</span>
+      <span style="font-size:14px;font-weight:700;font-family:'Space Mono',monospace" id="cost-input-tokens">0</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:var(--muted)">Output tokenid</span>
+      <span style="font-size:14px;font-weight:700;font-family:'Space Mono',monospace" id="cost-output-tokens">0</span>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:var(--muted)">Kokku</span>
+      <span style="font-size:18px;font-weight:800;color:var(--accent3);font-family:'Space Mono',monospace" id="cost-total">$0.00</span>
+    </div>
+    <div style="font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;line-height:1.5">Sonnet: $3/M input · $15/M output</div>
+    <button onclick="resetCost()" style="background:rgba(240,96,96,0.1);border:1px solid rgba(240,96,96,0.2);color:var(--red);border-radius:8px;padding:7px;font-size:11px;font-family:'Space Mono',monospace;cursor:pointer">Nulli statistika</button>
+  </div>
+</div>
+<div id="cost-backdrop" onclick="toggleCostPopup()" style="display:none;position:fixed;inset:0;z-index:299"></div>
+
 <!-- TODAY -->
 <div id="page-today" class="tab-page active">
 
@@ -238,6 +264,7 @@
       <div class="ring-center">
         <div class="ring-kcal" id="ring-kcal">0</div>
         <div class="ring-label">KCAL</div>
+        <button onclick="toggleCostPopup()" id="cost-btn" style="margin-top:6px;background:none;border:none;color:var(--accent3);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;padding:0;letter-spacing:0.05em">$0.0000</button>
       </div>
     </div>
     <div class="summary-stats">
@@ -282,17 +309,35 @@
   <div class="section">
     <div class="section-title">💧 Lisa vesi / jook</div>
     <div class="water-btns">
-      <button class="water-btn" onclick="addWater(50,'💧','Vesi')" style="border-color:rgba(96,200,240,0.4)">
-        <div class="water-icon">💧</div><div class="wval">+50</div><div class="wlbl">ml vesi</div>
-      </button>
       <button class="water-btn" onclick="addWater(100,'💧','Vesi')" style="border-color:rgba(96,200,240,0.4)">
-        <div class="water-icon">🥤</div><div class="wval">+100</div><div class="wlbl">ml vesi</div>
+        <div class="water-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 4 C14 4 7 13 7 18 C7 21.866 10.134 25 14 25 C17.866 25 21 21.866 21 18 C21 13 14 4 14 4Z" fill="rgba(96,200,240,0.3)" stroke="var(--accent2)" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="wval">+100</div><div class="wlbl">ml vesi</div>
       </button>
-      <button class="water-btn" onclick="addWater(100,'☕','Kohv')">
-        <div class="water-icon">☕</div><div class="wval">+100</div><div class="wlbl">ml kohv</div>
+      <button class="water-btn" onclick="addWater(200,'💧','Vesi')" style="border-color:rgba(96,200,240,0.4)">
+        <div class="water-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 4 C14 4 7 13 7 18 C7 21.866 10.134 25 14 25 C17.866 25 21 21.866 21 18 C21 13 14 4 14 4Z" fill="rgba(96,200,240,0.5)" stroke="var(--accent2)" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 19 Q14 17 18 19" stroke="rgba(255,255,255,0.3)" stroke-width="1" stroke-linecap="round"/></svg>
+        </div>
+        <div class="wval">+200</div><div class="wlbl">ml vesi</div>
+      </button>
+      <button class="water-btn" onclick="addWater(100,'☕','Kohv')" style="background:rgba(101,67,33,0.2);border-color:rgba(139,90,43,0.5)">
+        <div class="water-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect x="5" y="13" width="15" height="11" rx="2" fill="rgba(101,67,33,0.6)" stroke="#a0622a" stroke-width="1.5"/>
+            <path d="M20 15 Q25 15 25 18 Q25 21 20 21" stroke="#a0622a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <path d="M9 13 Q9 9 12 9" stroke="#a0622a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+            <path d="M13 13 Q13 7 16 7" stroke="#a0622a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+            <line x1="6" y1="24" x2="19" y2="24" stroke="#a0622a" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="wval" style="color:#c8845a">+100</div><div class="wlbl">ml kohv</div>
       </button>
       <button class="water-btn" onclick="togglePanel('drink')" style="color:var(--muted)">
-        <div class="water-icon">🔍</div><div class="wval">muu</div><div class="wlbl">jook</div>
+        <div class="water-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="10" stroke="var(--muted)" stroke-width="1.5"/><line x1="14" y1="9" x2="14" y2="19" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"/><line x1="9" y1="14" x2="19" y2="14" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="wval" style="font-size:12px">muu</div><div class="wlbl">jook</div>
       </button>
     </div>
 
@@ -338,12 +383,33 @@
     <div class="section-title">🍽️ Lisa toit</div>
     <div class="add-food-row">
       <button class="add-food-btn photo" onclick="togglePanel('photo')">
-        <div class="afb-icon">📷</div>
+        <div class="afb-icon">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect x="3" y="11" width="34" height="24" rx="3" stroke="var(--accent)" stroke-width="1.8" fill="rgba(200,240,96,0.06)"/>
+            <circle cx="20" cy="23" r="7" stroke="var(--accent)" stroke-width="1.8"/>
+            <circle cx="20" cy="23" r="3.5" fill="rgba(200,240,96,0.2)" stroke="var(--accent)" stroke-width="1.2"/>
+            <path d="M14 11 L16 6 H24 L26 11" stroke="var(--accent)" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+            <circle cx="31" cy="16" r="1.5" fill="var(--accent)"/>
+          </svg>
+        </div>
         <div class="afb-title">Foto</div>
         <div class="afb-sub">AI hindab kcal</div>
       </button>
       <button class="add-food-btn barcode" onclick="togglePanel('barcode')">
-        <div class="afb-icon">📦</div>
+        <div class="afb-icon">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect x="3" y="8" width="3" height="24" fill="var(--accent2)"/>
+            <rect x="8" y="8" width="1.5" height="24" fill="var(--accent2)"/>
+            <rect x="11" y="8" width="3" height="24" fill="var(--accent2)"/>
+            <rect x="16" y="8" width="1.5" height="24" fill="var(--accent2)"/>
+            <rect x="19" y="8" width="2.5" height="24" fill="var(--accent2)"/>
+            <rect x="23.5" y="8" width="1.5" height="24" fill="var(--accent2)"/>
+            <rect x="27" y="8" width="3" height="24" fill="var(--accent2)"/>
+            <rect x="32" y="8" width="1.5" height="24" fill="var(--accent2)"/>
+            <rect x="35" y="8" width="2" height="24" fill="var(--accent2)"/>
+            <text x="20" y="38" text-anchor="middle" font-family="Space Mono,monospace" font-size="5" fill="var(--accent2)">4740098</text>
+          </svg>
+        </div>
         <div class="afb-title">Barkood</div>
         <div class="afb-sub">täpsed andmed</div>
       </button>
@@ -720,6 +786,8 @@ async function analyzeFood() {
       })
     });
     const data = await resp.json();
+    if (data.error) throw new Error(data.error.message || 'API viga');
+    if (data.usage) trackTokens(data.usage.input_tokens||0, data.usage.output_tokens||0);
     const text = data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
     const result = JSON.parse(text);
     pendingPhotoResult = result;
@@ -1054,6 +1122,48 @@ function discardDrink() {
   document.getElementById('drink-search-status').textContent = '';
 }
 
+// ── TOKEN TRACKING ─────────────────────────────────────────────────────────
+function getUsage() {
+  try { return JSON.parse(localStorage.getItem('kv_usage')||'{"requests":0,"input":0,"output":0}'); }
+  catch { return {requests:0,input:0,output:0}; }
+}
+function trackTokens(input, output) {
+  const u = getUsage();
+  u.requests += 1;
+  u.input += input;
+  u.output += output;
+  localStorage.setItem('kv_usage', JSON.stringify(u));
+  updateCostBtn();
+}
+function calcCost(u) {
+  return (u.input / 1_000_000 * 3) + (u.output / 1_000_000 * 15);
+}
+function updateCostBtn() {
+  const u = getUsage();
+  const cost = calcCost(u);
+  document.getElementById('cost-btn').textContent = '$' + cost.toFixed(4);
+}
+function toggleCostPopup() {
+  const popup = document.getElementById('cost-popup');
+  const backdrop = document.getElementById('cost-backdrop');
+  const visible = popup.style.display !== 'none';
+  if (!visible) {
+    const u = getUsage();
+    document.getElementById('cost-requests').textContent = u.requests;
+    document.getElementById('cost-input-tokens').textContent = u.input.toLocaleString();
+    document.getElementById('cost-output-tokens').textContent = u.output.toLocaleString();
+    document.getElementById('cost-total').textContent = '$' + calcCost(u).toFixed(4);
+  }
+  popup.style.display = visible ? 'none' : 'block';
+  backdrop.style.display = visible ? 'none' : 'block';
+}
+function resetCost() {
+  localStorage.removeItem('kv_usage');
+  updateCostBtn();
+  toggleCostPopup();
+  toast('Statistika nullitud');
+}
+
 // ── SETTINGS ───────────────────────────────────────────────────────────────
 function saveApiKey() {
   const k = document.getElementById('apikey-input').value.trim();
@@ -1101,6 +1211,7 @@ function toast(msg) {
 }
 
 render();
+updateCostBtn();
 </script>
 </body>
 </html>
