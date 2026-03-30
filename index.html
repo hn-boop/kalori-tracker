@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Kalori & Vesi</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
 
   :root {
     --bg: #0f0f0f;
@@ -26,7 +26,7 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Syne', sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     min-height: 100vh;
     padding-bottom: 100px;
   }
@@ -39,7 +39,7 @@
     border-bottom: 1px solid var(--border);
   }
   .header-title { font-size: 11px; font-family: 'Space Mono', monospace; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; }
-  .header-date { font-size: 22px; font-weight: 800; line-height: 1; margin-top: 2px; }
+  .header-date { font-size: 22px; font-weight: 700; line-height: 1; margin-top: 2px; }
   .header-nav { display: flex; gap: 6px; align-items: center; }
   .nav-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
 
@@ -50,11 +50,11 @@
   .ring-bg { fill: none; stroke: var(--surface2); stroke-width: 8; }
   .ring-fill { fill: none; stroke: var(--accent); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.6s cubic-bezier(.4,0,.2,1); }
   .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
-  .ring-kcal { font-size: 22px; font-weight: 800; color: var(--accent); }
+  .ring-kcal { font-size: 22px; font-weight: 700; color: var(--accent); }
   .ring-label { font-size: 9px; font-family: 'Space Mono', monospace; color: var(--muted); letter-spacing: 0.1em; margin-top: 2px; }
   .summary-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
-  .stat-val { font-size: 18px; font-weight: 800; line-height: 1; }
+  .stat-val { font-size: 18px; font-weight: 700; line-height: 1; }
   .stat-lbl { font-size: 9px; font-family: 'Space Mono', monospace; color: var(--muted); letter-spacing: 0.08em; margin-top: 3px; }
   .stat-box.water .stat-val { color: var(--accent2); }
   .stat-box.protein .stat-val { color: var(--accent3); }
@@ -66,23 +66,23 @@
   .section { padding: 0 16px 16px; }
   .section-title { font-size: 10px; font-family: 'Space Mono', monospace; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px; }
   .water-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .water-btn { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--accent2); padding: 12px 6px; cursor: pointer; text-align: center; transition: all 0.15s; font-family: 'Syne', sans-serif; }
+  .water-btn { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--accent2); padding: 12px 6px; cursor: pointer; text-align: center; transition: all 0.15s; font-family: 'Barlow Condensed', sans-serif; }
   .water-btn:active { background: rgba(96,200,240,0.15); border-color: var(--accent2); transform: scale(0.96); }
-  .water-btn .wval { font-size: 16px; font-weight: 800; line-height: 1; }
-  .water-btn .wlbl { font-size: 9px; color: var(--muted); margin-top: 2px; font-family: 'Space Mono', monospace; }
+  .water-btn .wval { font-size: 20px; font-weight: 700; line-height: 1; }
+  .water-btn .wlbl { font-size: 10px; color: var(--muted); margin-top: 2px; font-family: 'Space Mono', monospace; }
   .water-icon { font-size: 18px; margin-bottom: 2px; }
 
   /* ADD FOOD BUTTONS */
   .add-food-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-  .add-food-btn { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 10px; cursor: pointer; text-align: center; font-family: 'Syne', sans-serif; transition: all 0.15s; }
+  .add-food-btn { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 10px; cursor: pointer; text-align: center; font-family: 'Barlow Condensed', sans-serif; transition: all 0.15s; }
   .add-food-btn:active { transform: scale(0.97); }
   .add-food-btn.photo { border-color: rgba(200,240,96,0.3); }
   .add-food-btn.photo:active { background: rgba(200,240,96,0.08); }
   .add-food-btn.barcode { border-color: rgba(96,200,240,0.3); }
   .add-food-btn.barcode:active { background: rgba(96,200,240,0.08); }
   .afb-icon { font-size: 28px; margin-bottom: 6px; }
-  .afb-title { font-size: 13px; font-weight: 700; }
-  .afb-sub { font-size: 10px; color: var(--muted); font-family: 'Space Mono', monospace; margin-top: 3px; }
+  .afb-title { font-size: 17px; font-weight: 700; color: var(--text); }
+  .afb-sub { font-size: 11px; color: var(--muted); font-family: 'Space Mono', monospace; margin-top: 3px; }
 
   /* PHOTO PANEL */
   .panel { display: none; }
@@ -96,7 +96,7 @@
   .camera-sub { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: 'Space Mono', monospace; }
   #file-input { display: none; }
 
-  .analyze-btn { width: 100%; background: var(--accent); color: #0f0f0f; border: none; border-radius: var(--radius); padding: 14px; font-size: 14px; font-weight: 800; font-family: 'Syne', sans-serif; cursor: pointer; margin-top: 10px; display: none; letter-spacing: 0.05em; transition: all 0.15s; }
+  .analyze-btn { width: 100%; background: var(--accent); color: #0f0f0f; border: none; border-radius: var(--radius); padding: 14px; font-size: 14px; font-weight: 800; font-family: 'Barlow Condensed', sans-serif; cursor: pointer; margin-top: 10px; display: none; letter-spacing: 0.05em; transition: all 0.15s; }
   .analyze-btn:active { transform: scale(0.98); opacity: 0.9; }
   .analyze-btn.loading { background: var(--surface2); color: var(--muted); pointer-events: none; }
 
@@ -112,13 +112,13 @@
   .sc-bl { bottom: 12px; left: 12px; border-width: 0 0 2px 2px; }
   .sc-br { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; }
   .barcode-status { text-align: center; padding: 10px; font-size: 12px; font-family: 'Space Mono', monospace; color: var(--muted); }
-  .stop-scan-btn { width: 100%; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); padding: 11px; font-size: 13px; font-weight: 700; font-family: 'Syne', sans-serif; color: var(--muted); cursor: pointer; margin-top: 8px; }
+  .stop-scan-btn { width: 100%; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); padding: 11px; font-size: 13px; font-weight: 700; font-family: 'Barlow Condensed', sans-serif; color: var(--muted); cursor: pointer; margin-top: 8px; }
 
   /* MANUAL BARCODE INPUT */
   .manual-barcode-row { display: flex; gap: 8px; margin-top: 10px; }
   .manual-barcode-row input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 13px; padding: 10px 12px; outline: none; }
   .manual-barcode-row input:focus { border-color: var(--accent2); }
-  .manual-barcode-row button { background: var(--accent2); color: #0f0f0f; border: none; border-radius: 8px; padding: 10px 16px; font-weight: 800; font-family: 'Syne', sans-serif; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .manual-barcode-row button { background: var(--accent2); color: #0f0f0f; border: none; border-radius: 8px; padding: 10px 16px; font-weight: 800; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; cursor: pointer; white-space: nowrap; }
 
   /* PRODUCT CARD */
   .product-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-top: 10px; display: none; }
@@ -165,7 +165,7 @@
   .conf-low { background: rgba(240,96,96,0.15); color: var(--red); }
 
   .result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .action-btn { border-radius: 8px; padding: 10px; font-size: 12px; font-weight: 700; font-family: 'Syne', sans-serif; cursor: pointer; border: 1px solid var(--border); transition: all 0.15s; }
+  .action-btn { border-radius: 8px; padding: 10px; font-size: 12px; font-weight: 700; font-family: 'Barlow Condensed', sans-serif; cursor: pointer; border: 1px solid var(--border); transition: all 0.15s; }
   .action-btn:active { transform: scale(0.97); }
   .action-btn.confirm { background: var(--accent); color: #0f0f0f; border-color: var(--accent); }
   .action-btn.discard { background: transparent; color: var(--muted); }
@@ -188,7 +188,7 @@
   .apikey-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
   .apikey-bar input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 11px; padding: 8px 10px; outline: none; }
   .apikey-bar input:focus { border-color: var(--accent); }
-  .apikey-save { background: var(--accent); color: #0f0f0f; border: none; border-radius: 8px; padding: 8px 14px; font-weight: 700; font-size: 12px; font-family: 'Syne', sans-serif; cursor: pointer; white-space: nowrap; }
+  .apikey-save { background: var(--accent); color: #0f0f0f; border: none; border-radius: 8px; padding: 8px 14px; font-weight: 700; font-size: 12px; font-family: 'Barlow Condensed', sans-serif; cursor: pointer; white-space: nowrap; }
   .goal-edit { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
   .goal-edit input { width: 80px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 13px; padding: 6px 10px; outline: none; font-weight: 700; }
   .goal-edit input:focus { border-color: var(--accent); }
@@ -344,10 +344,10 @@
     <div class="panel" id="panel-drink" style="margin-top:10px">
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <input type="text" id="drink-search-input" placeholder="nt &quot;täispiim&quot;, &quot;apelsinimahl&quot;..."
-          style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Syne',sans-serif;font-size:13px;padding:10px 12px;outline:none"
+          style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Barlow Condensed', sans-serif;font-size:13px;padding:10px 12px;outline:none"
           onkeydown="if(event.key==='Enter')searchDrink()"
           onfocus="this.style.borderColor='var(--accent2)'" onblur="this.style.borderColor='var(--border)'">
-        <button onclick="searchDrink()" style="background:var(--accent2);color:#0f0f0f;border:none;border-radius:var(--radius);padding:10px 16px;font-weight:800;font-family:'Syne',sans-serif;font-size:13px;cursor:pointer">Otsi</button>
+        <button onclick="searchDrink()" style="background:var(--accent2);color:#0f0f0f;border:none;border-radius:var(--radius);padding:10px 16px;font-weight:800;font-family:'Barlow Condensed', sans-serif;font-size:13px;cursor:pointer">Otsi</button>
       </div>
       <div id="drink-search-status" style="font-size:11px;font-family:'Space Mono',monospace;color:var(--muted);padding:0 2px 6px">⚠️ Tekstiotsing vajab backend ühendust — kasuta hetkel barkoodi pakendatud jookidel</div>
       <div id="drink-results" style="display:flex;flex-direction:column;gap:6px"></div>
@@ -431,8 +431,8 @@
 
     <!-- TEXT PANEL -->
     <div class="panel" id="panel-text">
-      <textarea id="text-food-input" placeholder="Kirjelda mida sõid — nt &quot;kaerahelbe puder 2dl piimaga, peale mett ja 4 eri seemnesorti ca 1 spl&quot;" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Syne',sans-serif;font-size:13px;padding:12px;outline:none;resize:none;height:90px;line-height:1.5" oninput="this.style.borderColor=this.value?'var(--accent3)':'var(--border)'"></textarea>
-      <button onclick="analyzeTextFood()" id="text-analyze-btn" style="width:100%;background:var(--accent3);color:#0f0f0f;border:none;border-radius:var(--radius);padding:13px;font-size:14px;font-weight:800;font-family:'Syne',sans-serif;cursor:pointer;margin-top:8px;letter-spacing:0.04em;transition:all 0.15s">⚡ ANALÜÜSI KIRJELDUS</button>
+      <textarea id="text-food-input" placeholder="Kirjelda mida sõid — nt &quot;kaerahelbe puder 2dl piimaga, peale mett ja 4 eri seemnesorti ca 1 spl&quot;" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Barlow Condensed', sans-serif;font-size:13px;padding:12px;outline:none;resize:none;height:90px;line-height:1.5" oninput="this.style.borderColor=this.value?'var(--accent3)':'var(--border)'"></textarea>
+      <button onclick="analyzeTextFood()" id="text-analyze-btn" style="width:100%;background:var(--accent3);color:#0f0f0f;border:none;border-radius:var(--radius);padding:13px;font-size:14px;font-weight:800;font-family:'Barlow Condensed', sans-serif;cursor:pointer;margin-top:8px;letter-spacing:0.04em;transition:all 0.15s">⚡ ANALÜÜSI KIRJELDUS</button>
       <div class="result-card" id="text-result-card">
         <div class="result-title">ANALÜÜSI TULEMUS <span class="source-badge src-ai">AI hinnang</span></div>
         <div class="result-macros">
@@ -461,7 +461,7 @@
         <img id="preview-img" src="" alt="">
       </div>
       <input type="file" id="file-input" accept="image/*" capture="environment" onchange="onImageSelected(event)">
-      <textarea id="food-comment" placeholder="Lisa täpsustus (valikuline) — nt &quot;4 seemnesorti peale, ca 1 spl&quot;" style="width:100%;margin-top:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Syne',sans-serif;font-size:13px;padding:10px 12px;outline:none;resize:none;height:60px;display:none" oninput="this.style.borderColor=this.value?'var(--accent)':'var(--border)'"></textarea>
+      <textarea id="food-comment" placeholder="Lisa täpsustus (valikuline) — nt &quot;4 seemnesorti peale, ca 1 spl&quot;" style="width:100%;margin-top:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Barlow Condensed', sans-serif;font-size:13px;padding:10px 12px;outline:none;resize:none;height:60px;display:none" oninput="this.style.borderColor=this.value?'var(--accent)':'var(--border)'"></textarea>
       <button class="analyze-btn" id="analyze-btn" onclick="analyzeFood()">⚡ ANALÜÜSI TOIT</button>
       <div class="result-card" id="result-card">
         <div class="result-title">ANALÜÜSI TULEMUS <span class="source-badge src-ai">AI hinnang</span></div>
@@ -493,7 +493,7 @@
         </div>
       </div>
       <div class="barcode-status" id="barcode-status"></div>
-      <button id="start-scan-btn" onclick="startScan()" style="width:100%;background:var(--accent2);color:#0f0f0f;border:none;border-radius:var(--radius);padding:13px;font-size:14px;font-weight:800;font-family:'Syne',sans-serif;cursor:pointer;letter-spacing:0.04em">
+      <button id="start-scan-btn" onclick="startScan()" style="width:100%;background:var(--accent2);color:#0f0f0f;border:none;border-radius:var(--radius);padding:13px;font-size:14px;font-weight:800;font-family:'Barlow Condensed', sans-serif;cursor:pointer;letter-spacing:0.04em">
         📷 Skanni barkood
       </button>
       <button class="stop-scan-btn" id="stop-scan-btn" onclick="stopScan()" style="display:none">✕ Peata skann</button>
@@ -596,7 +596,7 @@
       </div>
     </div>
     <hr class="divider">
-    <button onclick="clearToday()" style="width:100%;background:rgba(240,96,96,0.1);border:1px solid rgba(240,96,96,0.3);color:var(--red);border-radius:var(--radius);padding:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer">
+    <button onclick="clearToday()" style="width:100%;background:rgba(240,96,96,0.1);border:1px solid rgba(240,96,96,0.3);color:var(--red);border-radius:var(--radius);padding:12px;font-family:'Barlow Condensed', sans-serif;font-weight:700;font-size:13px;cursor:pointer">
       🗑️ Kustuta tänane logi
     </button>
   </div>
@@ -1175,7 +1175,7 @@ async function searchDrink() {
     results.innerHTML = products.map((p, i) => {
       const n = p.nutriments;
       const kcal = Math.round(n['energy-kcal_100g'] || n['energy_100g']/4.184 || 0);
-      return `<button onclick="selectDrink(${i})" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;text-align:left;cursor:pointer;width:100%;font-family:'Syne',sans-serif;transition:all 0.15s" onmousedown="this.style.background='var(--surface2)'">
+      return `<button onclick="selectDrink(${i})" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;text-align:left;cursor:pointer;width:100%;font-family:'Barlow Condensed', sans-serif;transition:all 0.15s" onmousedown="this.style.background='var(--surface2)'">
         <div style="font-size:13px;font-weight:600;color:var(--text)">${p.product_name}</div>
         <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);margin-top:2px">${p.brands||''} · ${kcal} kcal/100ml</div>
       </button>`;
