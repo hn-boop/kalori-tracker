@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Kalori & Vesi</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
 
@@ -484,7 +483,7 @@
     <!-- BARCODE PANEL -->
     <div class="panel" id="panel-barcode">
       <div class="barcode-video-wrap" id="barcode-video-wrap" style="display:none">
-        <div id="barcode-scanner-container" style="width:100%;height:100%;position:relative"></div>
+        <video id="barcode-video" style="width:100%;height:100%;object-fit:cover;display:block" playsinline muted></video>
         <div class="scan-line"></div>
         <div class="scan-overlay">
           <div class="scan-corner sc-tl"></div>
@@ -882,39 +881,65 @@ function discardFood() {
 }
 
 // ── BARCODE SCAN ───────────────────────────────────────────────────────────
-function startScan() {
+let scanStream = null;
+let scanAnimFrame = null;
+
+async function startScan() {
   if (scanning) return;
-  document.getElementById('barcode-video-wrap').style.display='block';
-  document.getElementById('start-scan-btn').style.display='none';
-  document.getElementById('stop-scan-btn').style.display='block';
-  document.getElementById('barcode-status').textContent='Suuna kaamera barkoodile...';
 
-  Quagga.init({
-    inputStream: {
-      name: 'Live',
-      type: 'LiveStream',
-      target: document.getElementById('barcode-scanner-container'),
-      constraints: { facingMode: 'environment', width: {ideal:1280}, height: {ideal:720} }
-    },
-    decoder: { readers: ['ean_reader','ean_8_reader','upc_reader','upc_e_reader'] },
-    locate: true
-  }, err => {
-    if (err) { toast('❌ Kaamera viga: ' + err.message); stopScan(); return; }
-    Quagga.start();
+  // Kontrolli kas BarcodeDetector on saadaval
+  if (!('BarcodeDetector' in window)) {
+    toast('❌ Sinu brauser ei toeta skännerit — sisesta kood käsitsi');
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: {ideal:1280}, height: {ideal:720} }
+    });
+    scanStream = stream;
+
+    const video = document.getElementById('barcode-video');
+    video.srcObject = stream;
+    await video.play();
+
+    document.getElementById('barcode-video-wrap').style.display='block';
+    document.getElementById('start-scan-btn').style.display='none';
+    document.getElementById('stop-scan-btn').style.display='block';
+    document.getElementById('barcode-status').textContent='Suuna kaamera barkoodile...';
     scanning = true;
-  });
 
-  Quagga.onDetected(result => {
-    const code = result.codeResult.code;
-    if (code) {
-      stopScan();
-      lookupBarcode(code);
+    const detector = new BarcodeDetector({
+      formats: ['ean_13','ean_8','upc_a','upc_e','code_128','code_39']
+    });
+
+    async function detect() {
+      if (!scanning) return;
+      try {
+        const barcodes = await detector.detect(video);
+        if (barcodes.length > 0) {
+          const code = barcodes[0].rawValue;
+          stopScan();
+          lookupBarcode(code);
+          return;
+        }
+      } catch {}
+      scanAnimFrame = requestAnimationFrame(detect);
     }
-  });
+    scanAnimFrame = requestAnimationFrame(detect);
+
+  } catch(err) {
+    toast('❌ Kaamera viga: ' + err.message);
+    stopScan();
+  }
 }
 
 function stopScan() {
-  if (scanning) { try { Quagga.stop(); } catch {} scanning = false; }
+  scanning = false;
+  if (scanAnimFrame) { cancelAnimationFrame(scanAnimFrame); scanAnimFrame = null; }
+  if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
+  const video = document.getElementById('barcode-video');
+  if (video) { video.srcObject = null; }
   document.getElementById('barcode-video-wrap').style.display='none';
   document.getElementById('start-scan-btn').style.display='block';
   document.getElementById('stop-scan-btn').style.display='none';
@@ -930,7 +955,8 @@ async function lookupBarcode(code) {
   pendingProduct = null;
 
   try {
-    const resp = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+    const resp = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json?nocache=${Date.now()}`);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
 
     if (data.status !== 1 || !data.product) {
@@ -969,7 +995,7 @@ async function lookupBarcode(code) {
     document.getElementById('product-card').classList.add('visible');
 
   } catch(err) {
-    document.getElementById('barcode-status').textContent = '❌ Viga: ' + err.message;
+    document.getElementById('barcode-status').textContent = '❌ Viga: ' + err.message + ' — kontrolli internetiühendust';
   }
 }
 
