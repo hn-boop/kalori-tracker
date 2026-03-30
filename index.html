@@ -381,7 +381,7 @@
   <!-- ADD FOOD -->
   <div class="section">
     <div class="section-title">🍽️ Lisa toit</div>
-    <div class="add-food-row">
+    <div class="add-food-row" style="grid-template-columns:1fr 1fr 1fr">
       <button class="add-food-btn photo" onclick="togglePanel('photo')">
         <div class="afb-icon">
           <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
@@ -413,6 +413,42 @@
         <div class="afb-title">Barkood</div>
         <div class="afb-sub">täpsed andmed</div>
       </button>
+      <button class="add-food-btn" onclick="togglePanel('text')" style="border-color:rgba(240,160,96,0.3)">
+        <div class="afb-icon">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect x="5" y="6" width="30" height="28" rx="3" stroke="var(--accent3)" stroke-width="1.8" fill="rgba(240,160,96,0.06)"/>
+            <line x1="11" y1="14" x2="29" y2="14" stroke="var(--accent3)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="11" y1="20" x2="29" y2="20" stroke="var(--accent3)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="11" y1="26" x2="22" y2="26" stroke="var(--accent3)" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="32" cy="32" r="5" fill="var(--accent3)"/>
+            <line x1="30" y1="32" x2="34" y2="32" stroke="#0f0f0f" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="32" y1="30" x2="32" y2="34" stroke="#0f0f0f" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="afb-title">Kirjelda</div>
+        <div class="afb-sub">teksti järgi</div>
+      </button>
+    </div>
+
+    <!-- TEXT PANEL -->
+    <div class="panel" id="panel-text">
+      <textarea id="text-food-input" placeholder="Kirjelda mida sõid — nt &quot;kaerahelbe puder 2dl piimaga, peale mett ja 4 eri seemnesorti ca 1 spl&quot;" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Syne',sans-serif;font-size:13px;padding:12px;outline:none;resize:none;height:90px;line-height:1.5" oninput="this.style.borderColor=this.value?'var(--accent3)':'var(--border)'"></textarea>
+      <button onclick="analyzeTextFood()" id="text-analyze-btn" style="width:100%;background:var(--accent3);color:#0f0f0f;border:none;border-radius:var(--radius);padding:13px;font-size:14px;font-weight:800;font-family:'Syne',sans-serif;cursor:pointer;margin-top:8px;letter-spacing:0.04em;transition:all 0.15s">⚡ ANALÜÜSI KIRJELDUS</button>
+      <div class="result-card" id="text-result-card">
+        <div class="result-title">ANALÜÜSI TULEMUS <span class="source-badge src-ai">AI hinnang</span></div>
+        <div class="result-macros">
+          <div class="macro-box kcal"><div class="macro-val" id="tres-kcal">—</div><div class="macro-lbl">KCAL</div></div>
+          <div class="macro-box prot"><div class="macro-val" id="tres-prot">—</div><div class="macro-lbl">VALK g</div></div>
+          <div class="macro-box carb"><div class="macro-val" id="tres-carb">—</div><div class="macro-lbl">SÜSIV g</div></div>
+          <div class="macro-box fat"><div class="macro-val" id="tres-fat">—</div><div class="macro-lbl">RASV g</div></div>
+          <div class="macro-box fiber" style="grid-column:1/-1;background:rgba(160,240,192,0.07)"><div class="macro-val" id="tres-fiber">—</div><div class="macro-lbl">KIUDAINED g</div></div>
+        </div>
+        <div class="result-desc" id="tres-desc"></div>
+        <div class="result-actions">
+          <button class="action-btn confirm" onclick="confirmTextFood()">✓ Lisa päeva</button>
+          <button class="action-btn discard" onclick="discardTextFood()">✕ Tühista</button>
+        </div>
+      </div>
     </div>
 
     <!-- PHOTO PANEL -->
@@ -634,11 +670,12 @@ function togglePanel(name) {
     if (name==='barcode') stopScan();
     activePanel = null;
   } else {
-    ['photo','barcode','drink'].forEach(p => document.getElementById('panel-'+p).classList.remove('visible'));
+    ['photo','barcode','drink','text'].forEach(p => document.getElementById('panel-'+p).classList.remove('visible'));
     stopScan();
     document.getElementById('panel-'+name).classList.add('visible');
     activePanel = name;
     if (name==='drink') setTimeout(()=>document.getElementById('drink-search-input').focus(), 100);
+    if (name==='text') setTimeout(()=>document.getElementById('text-food-input').focus(), 100);
   }
 }
 
@@ -686,6 +723,8 @@ function render() {
     if (item.type==='food') {
       const src = item.source==='barcode'
         ? `<span class="source-badge src-off">OFF</span>`
+        : item.source==='text'
+        ? `<span class="source-badge" style="background:rgba(240,160,96,0.15);color:var(--accent3)">TXT</span>`
         : `<span class="source-badge src-ai">AI</span>`;
       const thumb = item.img
         ? `<img class="log-thumb" src="${item.img}">`
@@ -975,6 +1014,84 @@ function discardBarcode() {
   document.getElementById('product-card').classList.remove('visible');
   document.getElementById('barcode-status').textContent='';
   document.getElementById('manual-barcode').value='';
+}
+
+// ── TEXT FOOD ANALYSIS ─────────────────────────────────────────────────────
+let pendingTextResult = null;
+
+async function analyzeTextFood() {
+  const s = getSettings();
+  if (!s.apiKey) { toast('⚠️ Lisa API võti Seadetes!'); switchTab('settings'); return; }
+  const desc = document.getElementById('text-food-input').value.trim();
+  if (!desc) { toast('Kirjelda esmalt mida sõid'); return; }
+
+  const btn = document.getElementById('text-analyze-btn');
+  btn.textContent = '⏳ Analüüsin...';
+  btn.style.background = 'var(--surface2)';
+  btn.style.color = 'var(--muted)';
+  btn.style.pointerEvents = 'none';
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': s.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        messages: [{role:'user', content:`Kasutaja kirjeldas toitu: "${desc}"
+
+Hinda toiteväärtused. Vasta AINULT JSON-ina (ilma markdown-ita):
+{"name":"lühike nimi eesti keeles max 30 tähemärki","kcal":number,"protein":number,"carbs":number,"fat":number,"fiber":number,"confidence":"high|medium|low","description":"1-2 lauset eesti keeles max 120 tähemärki"}`}]
+      })
+    });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message || 'API viga');
+    if (data.usage) trackTokens(data.usage.input_tokens||0, data.usage.output_tokens||0);
+    const text = data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const result = JSON.parse(text);
+    pendingTextResult = result;
+
+    document.getElementById('tres-kcal').textContent = result.kcal;
+    document.getElementById('tres-prot').textContent = result.protein;
+    document.getElementById('tres-carb').textContent = result.carbs;
+    document.getElementById('tres-fat').textContent = result.fat;
+    document.getElementById('tres-fiber').textContent = result.fiber ?? '?';
+    const confMap = {high:['conf-high','✓ täpne'],medium:['conf-mid','~ ligikaudne'],low:['conf-low','? ebakindel']};
+    const [cls,lbl] = confMap[result.confidence]||confMap.medium;
+    document.getElementById('tres-desc').innerHTML = `<strong>${result.name}</strong> <span class="confidence-badge ${cls}">${lbl}</span><br><span style="font-size:12px">${result.description}</span>`;
+    document.getElementById('text-result-card').classList.add('visible');
+  } catch(err) {
+    toast('❌ Viga: ' + (err.message||'API ei vastanud'));
+  }
+  btn.textContent = '⚡ ANALÜÜSI KIRJELDUS';
+  btn.style.background = 'var(--accent3)';
+  btn.style.color = '#0f0f0f';
+  btn.style.pointerEvents = 'auto';
+}
+
+function confirmTextFood() {
+  if (!pendingTextResult) return;
+  const log = getLog(currentDate);
+  log.push({type:'food', source:'text', name:pendingTextResult.name,
+    kcal:pendingTextResult.kcal, protein:pendingTextResult.protein,
+    carbs:pendingTextResult.carbs, fat:pendingTextResult.fat,
+    fiber:pendingTextResult.fiber||0, img:null, time:timeNow()});
+  saveLog(currentDate, log);
+  discardTextFood();
+  render();
+  toast('✓ ' + pendingTextResult.name + ' lisatud!');
+}
+
+function discardTextFood() {
+  pendingTextResult = null;
+  document.getElementById('text-food-input').value = '';
+  document.getElementById('text-food-input').style.borderColor = 'var(--border)';
+  document.getElementById('text-result-card').classList.remove('visible');
 }
 
 // ── DRINK SEARCH ───────────────────────────────────────────────────────────
