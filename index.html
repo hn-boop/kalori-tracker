@@ -757,11 +757,11 @@ function renderHistory() {
     const foodItems = log.filter(item => item.type==='food');
     const foodHtml = foodItems.length ? foodItems.map((item,i) => {
       const realIdx = log.indexOf(item);
-      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--border)">
-        <div style="flex:1;font-size:12px;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.name}</div>
-        <div style="font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0">${item.kcal}</div>
-        ${!isToday ? `<button onclick="addFromHistory('${key}',${realIdx})" style="background:rgba(200,240,96,0.1);border:1px solid rgba(200,240,96,0.3);border-radius:6px;color:var(--accent);font-size:11px;padding:3px 8px;cursor:pointer;flex-shrink:0;font-family:'Barlow Condensed',sans-serif">+ täna</button>` : ''}
-      </div>`;
+      const addBtn = !isToday ? '<button onclick="addFromHistory(\'' + key + '\',' + realIdx + ')" style="background:rgba(200,240,96,0.1);border:1px solid rgba(200,240,96,0.3);border-radius:6px;color:var(--accent);font-size:11px;padding:3px 8px;cursor:pointer;flex-shrink:0">+ täna</button>' : '';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--border)">'
+        + '<div style="flex:1;font-size:12px;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + item.name + '</div>'
+        + '<div style="font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0">' + item.kcal + '</div>'
+        + addBtn + '</div>';
     }).join('') : '';
 
     return `<div style="background:var(--surface);border:1px solid ${isToday?'var(--accent)':'var(--border)'};border-radius:var(--radius);padding:12px 14px">
