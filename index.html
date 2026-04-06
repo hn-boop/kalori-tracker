@@ -1388,6 +1388,7 @@ function addFromHistory(dateKey, i) {
   if (currentDate === today) render();
   toast('✓ ' + item.name + ' lisatud tänasesse!');
 }
+function deleteEntry(i) {
   const log = getLog(currentDate); log.splice(i,1);
   saveLog(currentDate,log); render();
 }
