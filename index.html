@@ -635,7 +635,14 @@ function formatDate(key) {
   if (key === today) return 'Täna, ' + parseInt(d) + '. ' + months[parseInt(m)-1];
   return names[wd] + ' ' + parseInt(d) + '. ' + months[parseInt(m)-1];
 }
-function round1(n) { return Math.round(n * 10) / 10; }
+function round1(n) { return Math.round((n || 0) * 10) / 10; }
+function roundMacros(item) {
+  item.protein = round1(item.protein);
+  item.carbs = round1(item.carbs);
+  item.fat = round1(item.fat);
+  item.fiber = round1(item.fiber);
+  return item;
+}
 
 // ── STORAGE ────────────────────────────────────────────────────────────────
 function getLog(k) { try { return JSON.parse(localStorage.getItem('log_'+k)||'[]'); } catch { return []; } }
@@ -728,7 +735,7 @@ function render() {
       const thumb = item.img
         ? `<img class="log-thumb" src="${item.img}">`
         : `<div class="log-thumb-icon">🍽️</div>`;
-      return `<div class="log-item">${thumb}<div class="log-info"><div class="log-name">${item.name}${src}</div><div class="log-time">${item.time}</div></div><div class="log-kcal">${item.kcal}</div><button class="log-del" onclick="deleteEntry(${i})">×</button></div>`;
+      return `<div class="log-item">${thumb}<div class="log-info"><div class="log-name">${item.name}${src}</div><div class="log-time">${item.time}</div></div><div class="log-kcal">${item.kcal}</div><button class="log-del" title="Lisa uuesti" onclick="repeatEntry(${i})" style="color:var(--accent);font-size:18px;margin-right:-2px">+</button><button class="log-del" onclick="deleteEntry(${i})">×</button></div>`;
     } else {
       return `<div class="log-item"><div class="log-thumb-icon">${item.icon||'💧'}</div><div class="log-info"><div class="log-name">${item.label}</div><div class="log-time">${item.time}</div></div><div class="log-water-ml">${item.ml}ml</div><button class="log-del" onclick="deleteEntry(${i})">×</button></div>`;
     }
@@ -739,13 +746,24 @@ function renderHistory() {
   const hl = document.getElementById('history-list');
   const s = getSettings();
   const kcalGoal = s.kcalGoal || 2000;
+  const today = getTodayKey();
   const days = Array.from({length:14}, (_,i) => { const d=new Date(); d.setDate(d.getDate()-i); return d.toISOString().slice(0,10); });
   hl.innerHTML = days.map(key => {
     const log = getLog(key);
     let kcal=0, water=0;
     log.forEach(item => { if(item.type==='food') kcal+=item.kcal; if(item.type==='water') water+=item.ml; });
     const pct = Math.min(100, Math.round(kcal/kcalGoal*100));
-    const isToday = key===getTodayKey();
+    const isToday = key===today;
+    const foodItems = log.filter(item => item.type==='food');
+    const foodHtml = foodItems.length ? foodItems.map((item,i) => {
+      const realIdx = log.indexOf(item);
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--border)">
+        <div style="flex:1;font-size:12px;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.name}</div>
+        <div style="font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0">${item.kcal}</div>
+        ${!isToday ? `<button onclick="addFromHistory('${key}',${realIdx})" style="background:rgba(200,240,96,0.1);border:1px solid rgba(200,240,96,0.3);border-radius:6px;color:var(--accent);font-size:11px;padding:3px 8px;cursor:pointer;flex-shrink:0;font-family:'Barlow Condensed',sans-serif">+ täna</button>` : ''}
+      </div>`;
+    }).join('') : '';
+
     return `<div style="background:var(--surface);border:1px solid ${isToday?'var(--accent)':'var(--border)'};border-radius:var(--radius);padding:12px 14px">
       <div style="display:flex;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:13px;font-weight:600">${formatDate(key)}</div>
@@ -754,7 +772,8 @@ function renderHistory() {
       <div style="background:var(--surface2);height:4px;border-radius:2px;overflow:hidden;margin-bottom:6px">
         <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px"></div>
       </div>
-      <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted)">💧 ${water}ml · ${pct}% eesmärgist</div>
+      <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);margin-bottom:${foodItems.length?'8px':'0'}">💧 ${water}ml · ${pct}% eesmärgist</div>
+      ${foodHtml}
     </div>`;
   }).join('');
 }
@@ -1343,7 +1362,32 @@ function clearToday() {
   if (!confirm('Kustutad tänase logi?')) return;
   saveLog(currentDate, []); render(); toast('🗑️ Logi kustutatud');
 }
-function deleteEntry(i) {
+function repeatEntry(i) {
+  const log = getLog(currentDate);
+  const item = log[i];
+  if (!item || item.type !== 'food') return;
+  const newItem = {...item, time: timeNow()};
+  roundMacros(newItem);
+  log.push(newItem);
+  saveLog(currentDate, log);
+  render();
+  toast('✓ ' + item.name + ' lisatud uuesti!');
+}
+
+function addFromHistory(dateKey, i) {
+  const srcLog = getLog(dateKey);
+  const item = srcLog[i];
+  if (!item || item.type !== 'food') return;
+  const today = getTodayKey();
+  const todayLog = getLog(today);
+  const newItem = {...item, time: timeNow()};
+  roundMacros(newItem);
+  todayLog.push(newItem);
+  saveLog(today, todayLog);
+  // kui oleme täna vaates, uuenda
+  if (currentDate === today) render();
+  toast('✓ ' + item.name + ' lisatud tänasesse!');
+}
   const log = getLog(currentDate); log.splice(i,1);
   saveLog(currentDate,log); render();
 }
