@@ -635,7 +635,7 @@ function formatDate(key) {
   if (key === today) return 'Täna, ' + parseInt(d) + '. ' + months[parseInt(m)-1];
   return names[wd] + ' ' + parseInt(d) + '. ' + months[parseInt(m)-1];
 }
-function round1(n) { return Math.round((n || 0) * 10) / 10; }
+function round1(n) { return parseFloat((n || 0).toFixed(1)); }
 function roundMacros(item) {
   item.protein = round1(item.protein);
   item.carbs = round1(item.carbs);
@@ -705,8 +705,8 @@ function render() {
 
   document.getElementById('ring-kcal').textContent = totalKcal;
   document.getElementById('stat-water').textContent = totalWater;
-  document.getElementById('stat-protein').textContent = totalProtein + 'g';
-  document.getElementById('stat-fiber').textContent = round1(totalFiber) + 'g';
+  document.getElementById('stat-protein').textContent = parseFloat(totalProtein.toFixed(1)) + 'g';
+  document.getElementById('stat-fiber').textContent = parseFloat(totalFiber.toFixed(1)) + 'g';
   const fiberGoal = s.fiberGoal || 30;
   document.getElementById('fiber-goal-display').textContent = fiberGoal;
   document.getElementById('fiber-goal-input') && (document.getElementById('fiber-goal-input').value = fiberGoal);
