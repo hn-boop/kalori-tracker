@@ -596,6 +596,10 @@
       </div>
     </div>
     <hr class="divider">
+    <button onclick="exportData()" style="width:100%;background:rgba(96,200,240,0.1);border:1px solid rgba(96,200,240,0.3);color:var(--accent2);border-radius:var(--radius);padding:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:8px">
+      📥 Ekspordi andmed (JSON)
+    </button>
+    <hr class="divider">
     <button onclick="clearToday()" style="width:100%;background:rgba(240,96,96,0.1);border:1px solid rgba(240,96,96,0.3);color:var(--red);border-radius:var(--radius);padding:12px;font-family:'Barlow Condensed', sans-serif;font-weight:700;font-size:13px;cursor:pointer">
       🗑️ Kustuta tänane logi
     </button>
@@ -1327,6 +1331,23 @@ function resetCost() {
 }
 
 // ── SETTINGS ───────────────────────────────────────────────────────────────
+function exportData() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    try { data[key] = JSON.parse(localStorage.getItem(key)); }
+    catch { data[key] = localStorage.getItem(key); }
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'kalori-tracker-export-' + getTodayKey() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('✓ Andmed eksporditud!');
+}
+
 function saveApiKey() {
   const k = document.getElementById('apikey-input').value.trim();
   if (!k) { toast('Sisesta API võti'); return; }
