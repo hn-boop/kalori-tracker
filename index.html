@@ -596,12 +596,12 @@
       </div>
     </div>
     <hr class="divider">
+    <button onclick="syncToServer()" style="width:100%;background:rgba(255,209,102,0.1);border:1px solid rgba(255,209,102,0.3);color:#ffd166;border-radius:var(--radius);padding:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:8px">
+      ☁️ SAADA ANDMED SERVERISSE
+    </button>
     <button onclick="syncFromServer()" style="width:100%;background:rgba(79,255,176,0.1);border:1px solid rgba(79,255,176,0.3);color:#4fffb0;border-radius:var(--radius);padding:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:8px">
-  <button onclick="syncToServer()" style="width:100%;background:rgba(255,209,102,0.1);border:1px solid rgba(255,209,102,0.3);color:#ffd166;border-radius:var(--radius);padding:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:8px">
-  ☁️ SAADA ANDMED SERVERISSE
-</button>
       ☁️ LOGI SERVERIST ALLA
-</button>
+    </button>
     <button onclick="exportData()" style="width:100%;background:rgba(96,200,240,0.1);border:1px solid rgba(96,200,240,0.3);color:var(--accent2);border-radius:var(--radius);padding:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:8px">
       📥 Ekspordi andmed (JSON)
     </button>
@@ -655,13 +655,13 @@ function roundMacros(item) {
 }
 
 // ── STORAGE ────────────────────────────────────────────────────────────────
-const SERVER = 'https://web-production-9ade8.up.railway.app';
-
 function getLog(k) { try { return JSON.parse(localStorage.getItem('log_'+k)||'[]'); } catch { return []; } }
 function saveLog(k,l) {
   localStorage.setItem('log_'+k, JSON.stringify(l));
   syncToServer();
 }
+
+const SERVER = 'https://web-production-9ade8.up.railway.app';
 
 async function syncToServer() {
   try {
@@ -698,10 +698,11 @@ async function syncFromServer() {
         localStorage.setItem(k, JSON.stringify(merged));
       }
     }
-    renderDay(currentDate);
+    renderDay ? renderDay(currentDate) : render();
+    toast('✓ Sünkroniseeritud!');
   } catch(e) { console.log('Sync failed:', e); }
 }
-}
+
 function getSettings() { try { return JSON.parse(localStorage.getItem('kv_settings')||'{}'); } catch { return {}; } }
 function saveSettings(s) { localStorage.setItem('kv_settings', JSON.stringify(s)); }
 
@@ -1472,7 +1473,7 @@ function toast(msg) {
 
 render();
 updateCostBtn();
-  document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
   syncFromServer();
 });
 </script>
