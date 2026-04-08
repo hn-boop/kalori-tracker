@@ -686,10 +686,21 @@ async function syncFromServer() {
     const resp = await fetch(SERVER + '/sync');
     const data = await resp.json();
     for (const [k,v] of Object.entries(data)) {
-      if (k.startsWith('log_')) localStorage.setItem(k, JSON.stringify(v));
+      if (k.startsWith('log_')) {
+        const local = JSON.parse(localStorage.getItem(k) || '[]');
+        const remote = Array.isArray(v) ? v : [];
+        const merged = [...local];
+        for (const item of remote) {
+          const exists = merged.some(m => m.time === item.time && m.type === item.type);
+          if (!exists) merged.push(item);
+        }
+        merged.sort((a,b) => a.time.localeCompare(b.time));
+        localStorage.setItem(k, JSON.stringify(merged));
+      }
     }
     renderDay(currentDate);
   } catch(e) { console.log('Sync failed:', e); }
+}
 }
 function getSettings() { try { return JSON.parse(localStorage.getItem('kv_settings')||'{}'); } catch { return {}; } }
 function saveSettings(s) { localStorage.setItem('kv_settings', JSON.stringify(s)); }
