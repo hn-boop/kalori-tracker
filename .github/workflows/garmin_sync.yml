@@ -1,0 +1,28 @@
+name: Garmin Sync
+
+on:
+  workflow_dispatch:   # käsitsi käivitus (Sync nupp rakenduses)
+  schedule:
+    - cron: '0 5 * * *'   # iga päev kell 08:00 EET (05:00 UTC)
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Installi sõltuvused
+        run: pip install garminconnect requests
+
+      - name: Sünkroniseeri Garmin andmed
+        env:
+          GARMIN_EMAIL: ${{ secrets.GARMIN_EMAIL }}
+          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+          RAILWAY_URL: ${{ secrets.RAILWAY_URL }}
+        run: python garmin_sync_ci.py

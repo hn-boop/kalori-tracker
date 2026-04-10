@@ -1,0 +1,9 @@
+DI-Connect-Aggregator/
+DI-Connect-Fitness/
+DI-Connect-Metrics/
+DI-Connect-Wellness/
+.claude/settings.local.json
+garmin_config.json
+.garmin_tokens/
+__pycache__/
+*.pyc
