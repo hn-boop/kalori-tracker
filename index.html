@@ -596,25 +596,18 @@
       </div>
     </div>
     <hr class="divider">
-    <button onclick="syncToServer()" style="width:100%;background:rgba(255,209,102,0.1);border:1px solid rgba(255,209,102,0.3);color:#ffd166;border-radius:var(--radius);padding:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:8px">
-      ☁️ SAADA ANDMED SERVERISSE
+    <button id="main-sync-btn" onclick="syncAll()" style="width:100%;background:rgba(200,240,96,0.15);border:1px solid rgba(200,240,96,0.4);color:var(--accent);border-radius:var(--radius);padding:14px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;cursor:pointer;margin-bottom:4px;letter-spacing:0.05em">
+      🔄 SYNC
     </button>
-    <button onclick="syncFromServer()" style="width:100%;background:rgba(79,255,176,0.1);border:1px solid rgba(79,255,176,0.3);color:#4fffb0;border-radius:var(--radius);padding:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:8px">
-      ☁️ LOGI SERVERIST ALLA
-    </button>
-    <button onclick="exportData()" style="width:100%;background:rgba(96,200,240,0.1);border:1px solid rgba(96,200,240,0.3);color:var(--accent2);border-radius:var(--radius);padding:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:8px">
-      📥 Ekspordi andmed (JSON)
-    </button>
-    <hr class="divider">
-    <button id="garmin-sync-btn" onclick="syncGarmin()" style="width:100%;background:rgba(200,240,96,0.1);border:1px solid rgba(200,240,96,0.3);color:var(--accent);border-radius:var(--radius);padding:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:4px">
-      🔄 SYNC GARMIN
-    </button>
-    <div id="garmin-sync-status" style="font-size:11px;font-family:'Space Mono',monospace;color:var(--muted);text-align:center;margin-bottom:4px;min-height:14px"></div>
+    <div id="sync-status" style="font-size:11px;font-family:'Space Mono',monospace;color:var(--muted);text-align:center;margin-bottom:4px;min-height:14px"></div>
     <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
-      <input id="github-pat-input" type="password" placeholder="GitHub PAT (mobiili jaoks)" value=""
+      <input id="github-pat-input" type="password" placeholder="GitHub PAT (mobiili Garmin sync jaoks)"
         style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-size:12px;font-family:'Space Mono',monospace">
       <button onclick="saveGithubPat()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700">OK</button>
     </div>
+    <button onclick="exportData()" style="width:100%;background:rgba(96,200,240,0.1);border:1px solid rgba(96,200,240,0.3);color:var(--accent2);border-radius:var(--radius);padding:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:8px">
+      📥 Ekspordi andmed (JSON)
+    </button>
     <a href="analysis.html" style="display:block;width:100%;background:rgba(200,240,96,0.05);border:1px solid rgba(200,240,96,0.2);color:var(--accent);border-radius:var(--radius);padding:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:8px;text-align:center;text-decoration:none">
       📊 GARMIN ANALÜÜS
     </a>
@@ -743,10 +736,9 @@ async function syncGarminViaGitHub(btn, status) {
     );
 
     if (resp.status === 204) {
-      btn.textContent = '⏳ GitHub töötab...';
-      status.textContent = 'Sync käib GitHub Actions-is (~5 min). Lae leht uuesti kui valmis.';
+      btn.textContent = '⏳ GitHub (~5 min)';
+      status.textContent = 'GitHub Actions käivitatud — ootan tulemust...';
       status.style.color = 'var(--accent)';
-      // Küsi workflow staatust
       await pollGitHubWorkflow(btn, status, pat);
     } else {
       const err = await resp.json().catch(() => ({}));
@@ -781,78 +773,127 @@ async function pollGitHubWorkflow(btn, status, pat) {
       const elapsed = Math.round(i * 10 / 60) + ' min';
       if (run.status === 'completed') {
         if (run.conclusion === 'success') {
-          btn.textContent = '✅ SYNC GARMIN';
-          status.textContent = `✅ Garmin sync valmis! Lae analüüs uuesti.`;
+          btn.textContent = '✅ SYNC';
+          status.textContent = 'Garmin sync valmis!';
           status.style.color = 'var(--accent)';
           btn.disabled = false;
           showToast('Garmin andmed uuendatud!');
         } else {
-          btn.textContent = '🔄 SYNC GARMIN';
+          btn.textContent = '🔄 SYNC';
           status.textContent = `❌ Workflow lõppes: ${run.conclusion}`;
           status.style.color = 'var(--red)';
           btn.disabled = false;
         }
         return;
       } else {
-        status.textContent = `⏳ GitHub workflow: ${run.status} (${elapsed})`;
+        status.textContent = `⏳ GitHub: ${run.status} (${elapsed})`;
       }
     } catch(e) { /* jätka */ }
   }
-  // 10 minutit möödas
-  btn.textContent = '🔄 SYNC GARMIN';
-  status.textContent = 'Workflow kestab — kontrolli GitHub Actions tab';
+  btn.textContent = '🔄 SYNC';
+  status.textContent = 'Workflow kestab — kontrolli GitHub Actions';
   btn.disabled = false;
 }
 
-async function syncGarmin() {
-  const btn = document.getElementById('garmin-sync-btn');
-  const status = document.getElementById('garmin-sync-status');
+// ── SYNC ALL (üks nupp: toitumine ülesse + Garmin + alla) ────────────────────
 
-  btn.textContent = '⏳ Ühendun...';
+async function syncAll() {
+  const btn = document.getElementById('main-sync-btn');
+  const status = document.getElementById('sync-status');
+
   btn.disabled = true;
+  btn.textContent = '⏳ Saadan...';
   status.style.color = 'var(--muted)';
 
-  // 1. Proovi lokaalne server (desktop, kiire)
+  // 1. Saada toitumine serverisse
+  try {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith('log_')) {
+        try { data[key] = JSON.parse(localStorage.getItem(key)); }
+        catch { data[key] = localStorage.getItem(key); }
+      }
+    }
+    await fetch(SERVER + '/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    status.textContent = '✓ Toitumine serveris';
+  } catch(e) {
+    status.textContent = '⚠️ Toitumine: ' + e.message;
+  }
+
+  // 2. Garmin sync (lokaalne server → GitHub Actions)
+  btn.textContent = '⏳ Garmin sync...';
+  const garminOk = await doGarminSync(status);
+
+  // 3. Lae serverist alla (toitumine teistest seadmetest)
+  if (garminOk !== false) {
+    try {
+      const resp = await fetch(SERVER + '/sync');
+      const serverData = await resp.json();
+      for (const [k, v] of Object.entries(serverData)) {
+        if (k.startsWith('log_')) {
+          const local = JSON.parse(localStorage.getItem(k) || '[]');
+          const remote = Array.isArray(v) ? v : [];
+          const merged = [...local];
+          for (const item of remote) {
+            if (!merged.some(m => m.time === item.time && m.type === item.type))
+              merged.push(item);
+          }
+          merged.sort((a, b) => a.time.localeCompare(b.time));
+          localStorage.setItem(k, JSON.stringify(merged));
+        }
+      }
+      renderDay ? renderDay(currentDate) : render();
+    } catch(e) { /* ei blokeeri */ }
+  }
+
+  btn.disabled = false;
+}
+
+// Garmin sync sisemine loogika — tagastab true/false/null (null = GitHub käimas)
+async function doGarminSync(status) {
+  // Proovi lokaalne server (desktop)
   try {
     await fetch(SYNC_SERVER + '/status', { signal: AbortSignal.timeout(1500) });
-
-    // Lokaalne server töötab!
-    status.textContent = 'Lokaalne server leitud — sünkroniseerin...';
-    btn.textContent = '⏳ Sync käib...';
+    status.textContent = 'Lokaalne server → sünkroniseerin Garminiga...';
 
     await fetch(SYNC_SERVER + '/sync');
-
     let tries = 0;
     while (tries < 120) {
       await new Promise(r => setTimeout(r, 2000));
       tries++;
       const res = await fetch(SYNC_SERVER + '/status');
-      const data = await res.json();
-      if (!data.running) {
-        if (data.ok) {
-          btn.textContent = '✅ SYNC GARMIN';
-          status.textContent = data.msg;
-          status.style.color = 'var(--accent)';
-          btn.disabled = false;
+      const d = await res.json();
+      if (!d.running) {
+        if (d.ok) {
+          document.getElementById('sync-status').textContent = d.msg;
+          document.getElementById('sync-status').style.color = 'var(--accent)';
+          document.getElementById('main-sync-btn').textContent = '✅ SYNC';
           showToast('Garmin andmed uuendatud!');
+          return true;
         } else {
-          btn.textContent = '🔄 SYNC GARMIN';
-          status.textContent = '❌ ' + data.msg;
-          status.style.color = 'var(--red)';
-          btn.disabled = false;
+          document.getElementById('sync-status').textContent = '❌ ' + d.msg;
+          document.getElementById('sync-status').style.color = 'var(--red)';
+          document.getElementById('main-sync-btn').textContent = '🔄 SYNC';
+          return false;
         }
-        return;
       }
-      status.textContent = data.msg || 'Sync käib...';
+      status.textContent = d.msg || 'Sync käib...';
     }
-    btn.textContent = '🔄 SYNC GARMIN';
-    status.textContent = 'Timeout — kontrolli terminali';
-    btn.disabled = false;
-    return;
+    document.getElementById('main-sync-btn').textContent = '🔄 SYNC';
+    return false;
   } catch {
-    // Lokaalne server pole — proovi GitHub Actions (mobiil/remote)
-    status.textContent = 'Lokaalne server puudub → kasutan GitHub Actions...';
-    await syncGarminViaGitHub(btn, status);
+    // Lokaalne server pole → GitHub Actions
+    status.textContent = 'Lokaalne server puudub → GitHub Actions...';
+    await syncGarminViaGitHub(
+      document.getElementById('main-sync-btn'),
+      document.getElementById('sync-status')
+    );
+    return null; // käib taustal
   }
 }
 

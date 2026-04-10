@@ -272,12 +272,40 @@ def setup_config():
 
     return cfg
 
+# ── Token export (GitHub Actions jaoks) ───────────────────────────────────────
+
+def export_tokens_for_github():
+    """Ekspordib tokenid base64 kujul GitHub Secret jaoks."""
+    import zipfile, base64, io as _io
+    if not TOKEN_DIR.exists() or not any(TOKEN_DIR.iterdir()):
+        print("❌ Tokeneid pole — käivita esmalt server ja sünkroniseeri üks kord")
+        return
+    buf = _io.BytesIO()
+    with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for f in TOKEN_DIR.iterdir():
+            if f.is_file():
+                zf.write(f, f.name)
+    b64 = base64.b64encode(buf.getvalue()).decode()
+    print("=" * 60)
+    print("GARMIN_TOKENS secret GitHub jaoks:")
+    print("=" * 60)
+    print(b64)
+    print("=" * 60)
+    print("\nMine: github.com/hn-boop/kalori-tracker → Settings → Secrets")
+    print("Lisa uus secret nimega GARMIN_TOKENS ja kleebi ülalolev tekst.")
+
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    # --export-tokens: ekspordib tokenid GitHub jaoks
+    if "--export-tokens" in sys.argv:
+        export_tokens_for_github()
+        sys.exit(0)
+
     print("=" * 50)
     print("Garmin Sync Server")
     print("=" * 50)
+    print("Näpunäide: käivita --export-tokens et saada GitHub secret\n")
 
     # Kontrolli garminconnect
     try:

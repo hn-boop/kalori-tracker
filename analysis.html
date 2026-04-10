@@ -104,9 +104,23 @@
     </div>
   </div>
 
+  <!-- PERIOD SELECTOR -->
+  <div style="padding:0 16px 12px;max-width:820px;margin:0 auto">
+    <div style="display:flex;gap:6px;align-items:center">
+      <span style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:0.1em;white-space:nowrap">PERIOOD:</span>
+      <div style="display:flex;gap:4px;flex:1">
+        <button class="period-btn" data-days="14"  onclick="changePeriod(14)"  style="flex:1;padding:7px 4px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:var(--accent2);color:#0f0f0f">14p</button>
+        <button class="period-btn" data-days="30"  onclick="changePeriod(30)"  style="flex:1;padding:7px 4px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text)">30p</button>
+        <button class="period-btn" data-days="60"  onclick="changePeriod(60)"  style="flex:1;padding:7px 4px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text)">60p</button>
+        <button class="period-btn" data-days="90"  onclick="changePeriod(90)"  style="flex:1;padding:7px 4px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text)">90p</button>
+        <button class="period-btn" data-days="180" onclick="changePeriod(180)" style="flex:1;padding:7px 4px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text)">180p</button>
+      </div>
+    </div>
+  </div>
+
   <!-- SUMMARY -->
   <div id="summary-section" style="display:none">
-    <div class="section-title">Viimased 14 päeva — ülevaade</div>
+    <div class="section-title" id="period-label">Viimased 14 päeva — ülevaade</div>
     <div class="summary-grid">
       <div class="summary-card">
         <div class="sc-val" id="avg-kcal-in" style="color:var(--accent)">—</div>
@@ -216,21 +230,37 @@
 
 <script>
 const SERVER = 'https://web-production-9ade8.up.railway.app';
-const DAYS = 14;
 
-function getLast14Days() {
-  return Array.from({length: DAYS}, (_, i) => {
+let activePeriod = 14;
+let days = [];
+let DAY_LABELS = [];
+
+function computeDays(n) {
+  activePeriod = n;
+  days = Array.from({length: n}, (_, i) => {
     const d = new Date();
-    d.setDate(d.getDate() - (DAYS - 1) + i);
+    d.setDate(d.getDate() - (n - 1) + i);
     return d.toISOString().slice(0, 10);
+  });
+  DAY_LABELS = days.map(d => {
+    const [, m, day] = d.split('-');
+    return parseInt(day) + '.' + parseInt(m);
   });
 }
 
-const days = getLast14Days(); // oldest → newest
-const DAY_LABELS = days.map(d => {
-  const [, m, day] = d.split('-');
-  return parseInt(day) + '.' + parseInt(m);
-});
+function changePeriod(n) {
+  computeDays(n);
+  const lbl = document.getElementById('period-label');
+  if (lbl) lbl.textContent = `Viimased ${n} päeva — ülevaade`;
+  document.querySelectorAll('.period-btn').forEach(b => {
+    const active = parseInt(b.dataset.days) === n;
+    b.style.background = active ? 'var(--accent2)' : 'var(--surface2)';
+    b.style.color = active ? '#0f0f0f' : 'var(--text)';
+  });
+  tryRender();
+}
+
+computeDays(14); // algväärtus
 
 const state = {
   uds: {},
