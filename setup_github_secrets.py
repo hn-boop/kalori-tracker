@@ -71,8 +71,8 @@ def garmin_login_and_export(email, password):
     print(f"🔑 Garmin login ({email})...")
     os.makedirs(TOKEN_DIR, exist_ok=True)
     try:
-        garmin = garminconnect.Garmin(email, password, is_cn=False, tokenstore=TOKEN_DIR)
-        garmin.login()
+        garmin = garminconnect.Garmin(email, password, is_cn=False)
+        garmin.login(tokenstore=TOKEN_DIR)
         name = garmin.get_full_name()
         print(f"✅ Sisselogimine õnnestus: {name}")
     except Exception as e:

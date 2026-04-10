@@ -51,12 +51,8 @@ def do_garmin_sync(log):
     log("🔑 Garmin autentimine (kasutan salvestatud tokeneid kui võimalik)...")
     TOKEN_DIR.mkdir(exist_ok=True)
     try:
-        garmin = garminconnect.Garmin(
-            email, password,
-            is_cn=False,
-            tokenstore=str(TOKEN_DIR)
-        )
-        garmin.login()
+        garmin = garminconnect.Garmin(email, password, is_cn=False)
+        garmin.login(tokenstore=str(TOKEN_DIR))
         log("✅ Garmin sisselogimine õnnestus")
     except Exception as e:
         return False, f"Garmin login ebaõnnestus: {e}"

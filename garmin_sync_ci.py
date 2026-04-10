@@ -83,12 +83,8 @@ def main():
     # Garmin autentimine
     print(f"🔑 Garmin autentimine ({GARMIN_EMAIL})...")
     try:
-        garmin = garminconnect.Garmin(
-            GARMIN_EMAIL, GARMIN_PASSWORD,
-            is_cn=False,
-            tokenstore=TOKEN_DIR
-        )
-        garmin.login()
+        garmin = garminconnect.Garmin(GARMIN_EMAIL, GARMIN_PASSWORD, is_cn=False)
+        garmin.login(tokenstore=TOKEN_DIR)
         print("✅ Sisselogimine õnnestus")
     except Exception as e:
         print(f"❌ Garmin login ebaõnnestus: {type(e).__name__}: {e}")
