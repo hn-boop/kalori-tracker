@@ -653,8 +653,23 @@ function roundMacros(item) {
 
 // ── STORAGE ────────────────────────────────────────────────────────────────
 function getLog(k) { try { return JSON.parse(localStorage.getItem('log_'+k)||'[]'); } catch { return []; } }
+const SERVER = 'https://mosserver.tail34ce94.ts.net';
+
+function syncToServer(k, l) {
+  // Saada logi ka serverisse. Fire-and-forget: kui server pole
+  // kättesaadav (nt Tailscale väljas), ei sega see logimist.
+  try {
+    fetch(SERVER + '/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ['log_' + k]: l })
+    }).catch(function(){});
+  } catch (e) {}
+}
+
 function saveLog(k,l) {
   localStorage.setItem('log_'+k, JSON.stringify(l));
+  syncToServer(k, l);
 }
 
 function getSettings() { try { return JSON.parse(localStorage.getItem('kv_settings')||'{}'); } catch { return {}; } }
