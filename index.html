@@ -217,11 +217,15 @@ body > *{position:relative;z-index:1}
 .apikey-bar input{flex:1;background:rgba(230,233,234,.04);border:1px solid var(--rule);color:var(--text);font-family:var(--font-mono);font-size:11px;padding:9px 10px;outline:none}
 .apikey-bar input:focus{border-color:var(--verm-600)}
 .apikey-save{background:linear-gradient(120deg,var(--verm-600),var(--verm-700));color:#fdf1ea;border:none;padding:9px 15px;font-weight:500;font-size:11px;font-family:var(--font-ui);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
-.goal-edit{display:flex;gap:8px;align-items:center;margin-top:8px}
-.goal-edit input{width:84px;background:rgba(230,233,234,.04);border:1px solid var(--rule);color:var(--num);font-family:var(--font-display);font-size:16px;padding:6px 10px;outline:none}
-.goal-edit input:focus{border-color:var(--verm-600)}
-.goal-edit-lbl{font-size:11px;color:var(--text-45);font-family:var(--font-ui);letter-spacing:.06em}
-.goal-edit-save{background:none;border:1px solid var(--rule-strong);color:var(--verm-200);font-size:10px;font-family:var(--font-ui);letter-spacing:.14em;text-transform:uppercase;padding:7px 11px;cursor:pointer}
+.sfield-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.sfield-val{font-family:var(--font-display);font-size:21px;color:var(--num)}
+.sfield-unit{font-size:11px;color:var(--metal);margin-left:2px}
+.gslider{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:var(--rule-strong);outline:none;accent-color:var(--verm-600);cursor:pointer}
+.gslider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--verm-400);box-shadow:0 0 10px rgba(201,106,58,.5);cursor:pointer}
+.gslider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--verm-400);border:none;box-shadow:0 0 10px rgba(201,106,58,.5);cursor:pointer}
+.gslider:disabled{opacity:.4;cursor:default}
+.gslider:disabled::-webkit-slider-thumb{background:var(--metal);box-shadow:none;cursor:default}
+.gslider:disabled::-moz-range-thumb{background:var(--metal);box-shadow:none;cursor:default}
 
 /* tabs */
 .tab-bar{position:fixed;bottom:0;left:0;right:0;background:var(--ink-900);border-top:1px solid var(--rule);display:flex;padding:12px 0 24px;z-index:100}
@@ -596,41 +600,41 @@ hr.divider{border:none;border-top:1px solid var(--rule);margin:18px 0}
       Loo võti: <span style="color:var(--accent2)">console.anthropic.com</span>
     </div>
     <hr class="divider">
-    <div class="apikey-lbl" style="margin-bottom:10px">EESMÄRGID</div>
-    <div style="display:grid;gap:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="apikey-lbl" style="margin-bottom:0">EESMÄRGID</div>
+      <button onclick="toggleGoalsEdit()" id="goals-edit-toggle" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px">✏️</button>
+    </div>
+    <div style="display:grid;gap:14px" id="goals-fields">
       <div class="stat-box">
-        <div class="stat-lbl" style="margin-bottom:6px">KALORI EESMÄRK</div>
-        <div class="goal-edit">
-          <input type="number" id="goal-input2" value="2000" min="500" max="5000">
-          <span class="goal-edit-lbl">kcal</span>
-          <button class="goal-edit-save" onclick="saveGoal()">Salvesta</button>
+        <div class="sfield-head">
+          <div class="stat-lbl" style="margin-bottom:0">KALORI EESMÄRK</div>
+          <div class="sfield-val"><span id="sf-kcal-val">2000</span><span class="sfield-unit">kcal</span></div>
         </div>
+        <input type="range" class="gslider" id="goal-input2" min="1200" max="4000" step="50" value="2000" disabled oninput="onGoalsSlide()">
       </div>
       <div class="stat-box">
-        <div class="stat-lbl" style="margin-bottom:6px">VESI EESMÄRK</div>
-        <div class="goal-edit">
-          <input type="number" id="water-goal-input" value="2500" min="500" max="6000">
-          <span class="goal-edit-lbl">ml</span>
-          <button class="goal-edit-save" onclick="saveWaterGoal()">Salvesta</button>
+        <div class="sfield-head">
+          <div class="stat-lbl" style="margin-bottom:0">VESI EESMÄRK</div>
+          <div class="sfield-val"><span id="sf-water-val">2500</span><span class="sfield-unit">ml</span></div>
         </div>
+        <input type="range" class="gslider" id="water-goal-input" min="500" max="6000" step="100" value="2500" disabled oninput="onGoalsSlide()">
       </div>
       <div class="stat-box">
-        <div class="stat-lbl" style="margin-bottom:6px">KIUDAINE EESMÄRK</div>
-        <div class="goal-edit">
-          <input type="number" id="fiber-goal-input" value="30" min="10" max="80">
-          <span class="goal-edit-lbl">g</span>
-          <button class="goal-edit-save" onclick="saveFiberGoal()">Salvesta</button>
+        <div class="sfield-head">
+          <div class="stat-lbl" style="margin-bottom:0">KIUDAINE EESMÄRK</div>
+          <div class="sfield-val"><span id="sf-fiber-val">30</span><span class="sfield-unit">g</span></div>
         </div>
+        <input type="range" class="gslider" id="fiber-goal-input" min="10" max="80" step="5" value="30" disabled oninput="onGoalsSlide()">
       </div>
       <div class="stat-box">
-        <div class="stat-lbl" style="margin-bottom:6px">KEHAKAAL (VALGU EESMÄRK 2.0G/KG)</div>
-        <div class="goal-edit">
-          <input type="number" id="weight-goal-input" value="85" min="30" max="250" step="0.5">
-          <span class="goal-edit-lbl">kg</span>
-          <button class="goal-edit-save" onclick="saveWeightGoal()">Salvesta</button>
+        <div class="sfield-head">
+          <div class="stat-lbl" style="margin-bottom:0">KEHAKAAL (VALGU EESMÄRK 2.0G/KG)</div>
+          <div class="sfield-val"><span id="sf-weight-val">85</span><span class="sfield-unit">kg</span></div>
         </div>
+        <input type="range" class="gslider" id="weight-goal-input" min="40" max="150" step="0.5" value="85" disabled oninput="onGoalsSlide()">
       </div>
     </div>
+    <button id="goals-save-btn" onclick="saveAllGoals()" style="display:none;width:100%;background:linear-gradient(120deg,var(--verm-600),var(--verm-700));color:#fdf1ea;border:none;padding:12px;font-size:11px;font-weight:500;font-family:var(--font-ui);letter-spacing:.2em;text-transform:uppercase;cursor:pointer;margin-top:14px">✓ Salvesta eesmärgid</button>
     <hr class="divider">
     <a href="analysis.html" style="display:block;width:100%;background:rgba(201,106,58,0.05);border:1px solid rgba(201,106,58,0.2);color:var(--accent);border-radius:var(--radius);padding:12px;font-family:'Jost',sans-serif;font-weight:700;font-size:15px;cursor:pointer;text-align:center;text-decoration:none">
       📊 GARMIN ANALÜÜS
@@ -736,9 +740,12 @@ function render() {
 
   document.getElementById('header-date').textContent = formatDate(currentDate);
   document.getElementById('goal-input2').value = kcalGoal;
+  document.getElementById('sf-kcal-val').textContent = kcalGoal;
   document.getElementById('water-goal-input').value = s.waterGoal || 2500;
+  document.getElementById('sf-water-val').textContent = s.waterGoal || 2500;
   const weightKg = s.weightKg || 85;
   document.getElementById('weight-goal-input').value = weightKg;
+  document.getElementById('sf-weight-val').textContent = weightKg;
 
   const log = getLog(currentDate);
   let totalKcal=0, totalWater=0, totalProtein=0, totalFiber=0;
@@ -761,7 +768,8 @@ function render() {
   document.getElementById('protein-bar').style.width = proteinPct + '%';
   const fiberGoal = s.fiberGoal || 30;
   document.getElementById('fiber-goal-display').textContent = fiberGoal;
-  document.getElementById('fiber-goal-input') && (document.getElementById('fiber-goal-input').value = fiberGoal);
+  document.getElementById('fiber-goal-input').value = fiberGoal;
+  document.getElementById('sf-fiber-val').textContent = fiberGoal;
   const fiberPct = Math.min(100, Math.round(totalFiber/fiberGoal*100));
   document.getElementById('fiber-bar').style.width = fiberPct + '%';
   const circ = 289;
@@ -1427,29 +1435,33 @@ function saveApiKey() {
   document.getElementById('apikey-input').placeholder='✓ Salvestatud ('+k.slice(0,8)+'...)';
   toast('✓ API võti salvestatud');
 }
-function saveGoal() {
-  const v = parseInt(document.getElementById('goal-input2').value);
-  if (!v||v<500) { toast('Sisesta korrektne väärtus'); return; }
-  const s = getSettings(); s.kcalGoal=v; saveSettings(s);
-  render(); toast('✓ Eesmärk '+v+' kcal salvestatud');
+let goalsEditing = false;
+function toggleGoalsEdit() {
+  goalsEditing = !goalsEditing;
+  document.querySelectorAll('#goals-fields .gslider').forEach(f => f.disabled = !goalsEditing);
+  document.getElementById('goals-save-btn').style.display = goalsEditing ? 'block' : 'none';
+  document.getElementById('goals-edit-toggle').textContent = goalsEditing ? '✕' : '✏️';
+  if (!goalsEditing) render(); // loobu salvestamata liigutustest
 }
-function saveWaterGoal() {
-  const v = parseInt(document.getElementById('water-goal-input').value);
-  if (!v||v<500) { toast('Sisesta korrektne väärtus'); return; }
-  const s = getSettings(); s.waterGoal=v; saveSettings(s);
-  toast('✓ Vesi eesmärk '+v+'ml salvestatud');
+function onGoalsSlide() {
+  document.getElementById('sf-kcal-val').textContent = document.getElementById('goal-input2').value;
+  document.getElementById('sf-water-val').textContent = document.getElementById('water-goal-input').value;
+  document.getElementById('sf-fiber-val').textContent = document.getElementById('fiber-goal-input').value;
+  document.getElementById('sf-weight-val').textContent = document.getElementById('weight-goal-input').value;
 }
-function saveFiberGoal() {
-  const v = parseInt(document.getElementById('fiber-goal-input').value);
-  if (!v||v<10) { toast('Sisesta korrektne väärtus'); return; }
-  const s = getSettings(); s.fiberGoal=v; saveSettings(s);
-  render(); toast('✓ Kiudaine eesmärk '+v+'g salvestatud');
-}
-function saveWeightGoal() {
-  const v = parseFloat(document.getElementById('weight-goal-input').value);
-  if (!v||v<30) { toast('Sisesta korrektne väärtus'); return; }
-  const s = getSettings(); s.weightKg=v; saveSettings(s);
-  render(); toast('✓ Valgu eesmärk ' + Math.round(v*2) + 'g salvestatud');
+function saveAllGoals() {
+  const s = getSettings();
+  s.kcalGoal = parseInt(document.getElementById('goal-input2').value);
+  s.waterGoal = parseInt(document.getElementById('water-goal-input').value);
+  s.fiberGoal = parseInt(document.getElementById('fiber-goal-input').value);
+  s.weightKg = parseFloat(document.getElementById('weight-goal-input').value);
+  saveSettings(s);
+  goalsEditing = false;
+  document.querySelectorAll('#goals-fields .gslider').forEach(f => f.disabled = true);
+  document.getElementById('goals-save-btn').style.display = 'none';
+  document.getElementById('goals-edit-toggle').textContent = '✏️';
+  render();
+  toast('✓ Eesmärgid salvestatud');
 }
 function repeatEntry(i) {
   const log = getLog(currentDate);
