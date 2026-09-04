@@ -86,7 +86,7 @@ body > *{position:relative;z-index:1}
 .stat-lbl{font-size:8px;font-family:var(--font-ui);color:var(--text-45);letter-spacing:.2em;text-transform:uppercase;margin-top:5px}
 .stat-box.water .stat-val{color:var(--metal)}
 .stat-box.protein .stat-val{color:var(--verm-200)}
-.stat-box.goal{grid-column:1/-1}
+.stat-box.fiber{grid-column:1/-1}
 .goal-bar-bg{width:100%;height:3px;background:var(--track);margin-top:8px;overflow:hidden}
 .goal-bar-fill{height:100%;background:var(--verm-600);transition:width .5s ease}
 
@@ -309,30 +309,11 @@ hr.divider{border:none;border-top:1px solid var(--rule);margin:18px 0}
         <div class="stat-val" id="stat-protein">0g</div>
         <div class="stat-lbl">VALK</div>
       </div>
-      <div class="stat-box" style="--fiber-color:var(--accent4)">
+      <div class="stat-box fiber" style="--fiber-color:var(--accent4)">
         <div class="stat-val" id="stat-fiber" style="color:var(--accent4)">0g</div>
         <div class="stat-lbl">KIUD / <span id="fiber-goal-display">30</span>g</div>
         <div class="goal-bar-bg" style="margin-top:6px">
           <div class="goal-bar-fill" id="fiber-bar" style="width:0%;background:var(--accent4)"></div>
-        </div>
-      </div>
-      <div class="stat-box goal">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div class="stat-val" id="stat-goal-pct">0%</div>
-            <div class="stat-lbl">EESMÄRK (<span id="goal-display">2000</span> kcal)</div>
-          </div>
-          <button onclick="toggleGoalEdit()" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer">✏️</button>
-        </div>
-        <div id="goal-edit-wrap" style="display:none">
-          <div class="goal-edit">
-            <input type="number" id="goal-input" value="2000" min="500" max="5000">
-            <span class="goal-edit-lbl">kcal</span>
-            <button class="goal-edit-save" onclick="saveGoal()">Salvesta</button>
-          </div>
-        </div>
-        <div class="goal-bar-bg">
-          <div class="goal-bar-fill" id="goal-bar" style="width:0%"></div>
         </div>
       </div>
     </div>
@@ -742,8 +723,6 @@ function render() {
   const kcalGoal = s.kcalGoal || 2000;
 
   document.getElementById('header-date').textContent = formatDate(currentDate);
-  document.getElementById('goal-display').textContent = kcalGoal;
-  document.getElementById('goal-input').value = kcalGoal;
   document.getElementById('goal-input2').value = kcalGoal;
   document.getElementById('water-goal-input').value = s.waterGoal || 2500;
 
@@ -763,9 +742,6 @@ function render() {
   document.getElementById('fiber-goal-input') && (document.getElementById('fiber-goal-input').value = fiberGoal);
   const fiberPct = Math.min(100, Math.round(totalFiber/fiberGoal*100));
   document.getElementById('fiber-bar').style.width = fiberPct + '%';
-  const pct = Math.min(100, Math.round(totalKcal/kcalGoal*100));
-  document.getElementById('stat-goal-pct').textContent = pct + '%';
-  document.getElementById('goal-bar').style.width = pct + '%';
   const circ = 289;
   document.getElementById('ring-fill').style.strokeDashoffset = circ - (circ * Math.min(1, totalKcal/kcalGoal));
 
@@ -1430,10 +1406,9 @@ function saveApiKey() {
   toast('✓ API võti salvestatud');
 }
 function saveGoal() {
-  const v = parseInt(document.getElementById('goal-input').value||document.getElementById('goal-input2').value);
+  const v = parseInt(document.getElementById('goal-input2').value);
   if (!v||v<500) { toast('Sisesta korrektne väärtus'); return; }
   const s = getSettings(); s.kcalGoal=v; saveSettings(s);
-  document.getElementById('goal-edit-wrap').style.display='none';
   render(); toast('✓ Eesmärk '+v+' kcal salvestatud');
 }
 function saveWaterGoal() {
@@ -1447,10 +1422,6 @@ function saveFiberGoal() {
   if (!v||v<10) { toast('Sisesta korrektne väärtus'); return; }
   const s = getSettings(); s.fiberGoal=v; saveSettings(s);
   render(); toast('✓ Kiudaine eesmärk '+v+'g salvestatud');
-}
-function toggleGoalEdit() {
-  const w = document.getElementById('goal-edit-wrap');
-  w.style.display = w.style.display==='none'?'block':'none';
 }
 function repeatEntry(i) {
   const log = getLog(currentDate);
