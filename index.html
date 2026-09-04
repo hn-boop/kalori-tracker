@@ -307,7 +307,10 @@ hr.divider{border:none;border-top:1px solid var(--rule);margin:18px 0}
       </div>
       <div class="stat-box protein">
         <div class="stat-val" id="stat-protein">0g</div>
-        <div class="stat-lbl">VALK</div>
+        <div class="stat-lbl">VALK / <span id="protein-goal-display">170</span>g</div>
+        <div class="goal-bar-bg" style="margin-top:6px">
+          <div class="goal-bar-fill" id="protein-bar" style="width:0%;background:var(--verm-200)"></div>
+        </div>
       </div>
       <div class="stat-box fiber" style="--fiber-color:var(--accent4)">
         <div class="stat-val" id="stat-fiber" style="color:var(--accent4)">0g</div>
@@ -618,6 +621,14 @@ hr.divider{border:none;border-top:1px solid var(--rule);margin:18px 0}
           <button class="goal-edit-save" onclick="saveFiberGoal()">Salvesta</button>
         </div>
       </div>
+      <div class="stat-box">
+        <div class="stat-lbl" style="margin-bottom:6px">KEHAKAAL (VALGU EESMÄRK 2.0G/KG)</div>
+        <div class="goal-edit">
+          <input type="number" id="weight-goal-input" value="85" min="30" max="250" step="0.5">
+          <span class="goal-edit-lbl">kg</span>
+          <button class="goal-edit-save" onclick="saveWeightGoal()">Salvesta</button>
+        </div>
+      </div>
     </div>
     <hr class="divider">
     <a href="analysis.html" style="display:block;width:100%;background:rgba(201,106,58,0.05);border:1px solid rgba(201,106,58,0.2);color:var(--accent);border-radius:var(--radius);padding:12px;font-family:'Jost',sans-serif;font-weight:700;font-size:15px;cursor:pointer;text-align:center;text-decoration:none">
@@ -725,6 +736,8 @@ function render() {
   document.getElementById('header-date').textContent = formatDate(currentDate);
   document.getElementById('goal-input2').value = kcalGoal;
   document.getElementById('water-goal-input').value = s.waterGoal || 2500;
+  const weightKg = s.weightKg || 85;
+  document.getElementById('weight-goal-input').value = weightKg;
 
   const log = getLog(currentDate);
   let totalKcal=0, totalWater=0, totalProtein=0, totalFiber=0;
@@ -737,6 +750,10 @@ function render() {
   document.getElementById('stat-water').textContent = totalWater;
   document.getElementById('stat-protein').textContent = parseFloat(totalProtein.toFixed(1)) + 'g';
   document.getElementById('stat-fiber').textContent = parseFloat(totalFiber.toFixed(1)) + 'g';
+  const proteinGoal = Math.round(weightKg * 2);
+  document.getElementById('protein-goal-display').textContent = proteinGoal;
+  const proteinPct = Math.min(100, Math.round(totalProtein/proteinGoal*100));
+  document.getElementById('protein-bar').style.width = proteinPct + '%';
   const fiberGoal = s.fiberGoal || 30;
   document.getElementById('fiber-goal-display').textContent = fiberGoal;
   document.getElementById('fiber-goal-input') && (document.getElementById('fiber-goal-input').value = fiberGoal);
@@ -1422,6 +1439,12 @@ function saveFiberGoal() {
   if (!v||v<10) { toast('Sisesta korrektne väärtus'); return; }
   const s = getSettings(); s.fiberGoal=v; saveSettings(s);
   render(); toast('✓ Kiudaine eesmärk '+v+'g salvestatud');
+}
+function saveWeightGoal() {
+  const v = parseFloat(document.getElementById('weight-goal-input').value);
+  if (!v||v<30) { toast('Sisesta korrektne väärtus'); return; }
+  const s = getSettings(); s.weightKg=v; saveSettings(s);
+  render(); toast('✓ Valgu eesmärk ' + Math.round(v*2) + 'g salvestatud');
 }
 function repeatEntry(i) {
   const log = getLog(currentDate);
