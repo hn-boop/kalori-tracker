@@ -71,22 +71,20 @@ body > *{position:relative;z-index:1}
 
 /* summary + ring */
 .summary{padding:22px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
-.ring-wrap{position:relative;width:144px;height:144px;flex-shrink:0}
-.ring-svg{width:144px;height:144px;transform:rotate(-90deg)}
-.ring-bg{fill:none;stroke:var(--track);stroke-width:7}
-.ring-fill{fill:none;stroke:var(--verm-600);stroke-width:7;stroke-linecap:butt;transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1)}
+.ring-wrap{position:relative;width:168px;height:168px;flex-shrink:0}
+.ring-svg{width:168px;height:168px;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--track);stroke-width:8}
+.ring-fill{fill:none;stroke:var(--verm-600);stroke-width:8;stroke-linecap:butt;transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1)}
 .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
-.ring-kcal{font-family:var(--font-display);font-size:38px;color:var(--num);white-space:nowrap}
-.ring-label{font-size:8px;font-family:var(--font-ui);color:var(--metal);letter-spacing:.28em;margin-top:5px}
-.summary-stats{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--rule)}
-.stat-box{padding:10px 10px;border-top:1px solid var(--rule-soft);border-left:1px solid var(--rule-soft)}
-.stat-box:nth-child(-n+2){border-top:0}
-.stat-box:nth-child(odd){border-left:0}
+.ring-kcal{font-family:var(--font-display);font-size:44px;color:var(--num);white-space:nowrap}
+.ring-label{font-size:8px;font-family:var(--font-ui);color:var(--metal);letter-spacing:.28em;margin-top:6px}
+.summary-stats{display:flex;flex-direction:column;border:1px solid var(--rule)}
+.stat-box{padding:10px 12px;border-top:1px solid var(--rule-soft)}
+.stat-box:first-child{border-top:0}
 .stat-val{font-family:var(--font-display);font-size:20px;line-height:1;color:var(--num)}
 .stat-lbl{font-size:8px;font-family:var(--font-ui);color:var(--text-45);letter-spacing:.2em;text-transform:uppercase;margin-top:5px}
 .stat-box.water .stat-val{color:var(--metal)}
 .stat-box.protein .stat-val{color:var(--verm-200)}
-.stat-box.fiber{grid-column:1/-1}
 .goal-bar-bg{width:100%;height:3px;background:var(--track);margin-top:8px;overflow:hidden}
 .goal-bar-fill{height:100%;background:var(--verm-600);transition:width .5s ease}
 
@@ -303,7 +301,10 @@ hr.divider{border:none;border-top:1px solid var(--rule);margin:18px 0}
     <div class="summary-stats">
       <div class="stat-box water">
         <div class="stat-val" id="stat-water">0</div>
-        <div class="stat-lbl">VESI ML</div>
+        <div class="stat-lbl">VESI / <span id="water-goal-display">2500</span>ml</div>
+        <div class="goal-bar-bg" style="margin-top:6px">
+          <div class="goal-bar-fill" id="water-bar" style="width:0%;background:var(--metal)"></div>
+        </div>
       </div>
       <div class="stat-box protein">
         <div class="stat-val" id="stat-protein">0g</div>
@@ -750,6 +751,10 @@ function render() {
   document.getElementById('stat-water').textContent = totalWater;
   document.getElementById('stat-protein').textContent = parseFloat(totalProtein.toFixed(1)) + 'g';
   document.getElementById('stat-fiber').textContent = parseFloat(totalFiber.toFixed(1)) + 'g';
+  const waterGoal = s.waterGoal || 2500;
+  document.getElementById('water-goal-display').textContent = waterGoal;
+  const waterPct = Math.min(100, Math.round(totalWater/waterGoal*100));
+  document.getElementById('water-bar').style.width = waterPct + '%';
   const proteinGoal = Math.round(weightKg * 2);
   document.getElementById('protein-goal-display').textContent = proteinGoal;
   const proteinPct = Math.min(100, Math.round(totalProtein/proteinGoal*100));
