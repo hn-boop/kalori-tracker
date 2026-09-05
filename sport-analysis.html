@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sport Analüüs</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500&family=Jost:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   JAPANESE INK — design tokens (shared with nutrition-analysis.html)
+   Vermilion = data / active / primary / danger.  Silver = labels + rules.
+   ============================================================ */
+:root{
+  --ink-900:#090c10;
+  --ink-glow:rgba(138,44,12,.16);
+  --silver-glow:rgba(154,160,163,.07);
+
+  --verm-100:#f2c9b2;
+  --verm-200:#e0a17f;
+  --verm-400:#c96a3a;
+  --verm-600:#a03610;
+  --verm-700:#8a2c0c;
+
+  --metal:#9aa0a3;
+  --rule:rgba(154,160,163,.22);
+  --rule-soft:rgba(154,160,163,.18);
+  --rule-strong:rgba(154,160,163,.3);
+
+  --num:#f2f4f5;
+  --text:#e6e9ea;
+  --text-70:rgba(230,233,234,.7);
+  --text-50:rgba(230,233,234,.5);
+  --text-45:rgba(230,233,234,.45);
+  --text-40:rgba(230,233,234,.4);
+  --track:rgba(230,233,234,.1);
+
+  --font-display:'Bodoni Moda',serif;
+  --font-ui:'Jost',sans-serif;
+  --font-mono:'Space Mono',monospace;
+
+  --bg:var(--ink-900);
+  --surface:transparent;
+  --surface2:rgba(230,233,234,.05);
+  --border:var(--rule);
+  --muted:var(--metal);
+  --accent:var(--verm-400);
+  --accent2:var(--metal);
+  --accent3:var(--verm-700);
+  --accent4:var(--verm-200);
+  --red:var(--verm-600);
+  --radius:0px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  position:relative;
+  background:var(--ink-900);
+  color:var(--text);
+  font-family:var(--font-ui);
+  min-height:100vh;
+  padding-bottom:60px;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(85% 32% at 50% 0%, var(--ink-glow), transparent 70%),
+    radial-gradient(70% 30% at 50% 100%, var(--silver-glow), transparent 70%);
+}
+body > *{position:relative;z-index:1}
+
+.header{
+  padding:24px 20px 16px;
+  display:flex;justify-content:space-between;align-items:flex-end;gap:16px;
+  border-bottom:1px solid var(--rule);
+  margin-bottom:0;
+}
+.header-title{font-size:9.5px;font-family:var(--font-ui);letter-spacing:.36em;color:var(--verm-200);text-transform:uppercase}
+.header-sub{font-family:var(--font-display);font-size:25px;line-height:1;margin-top:8px;color:var(--num)}
+.back-btn{
+  border:1px solid var(--rule-strong);background:none;color:var(--text-70);
+  padding:9px 14px;font-family:var(--font-ui);font-size:11px;letter-spacing:.14em;
+  text-decoration:none;display:inline-block;cursor:pointer;white-space:nowrap;
+}
+.back-btn:hover{border-color:var(--rule);color:var(--text)}
+
+.analysis-nav{display:flex;gap:0;border-bottom:1px solid var(--rule);max-width:820px;margin:0 auto}
+.analysis-nav a{
+  flex:1;text-align:center;padding:11px 8px;font-family:var(--font-ui);font-size:10px;
+  letter-spacing:.18em;text-transform:uppercase;text-decoration:none;color:var(--text-50);
+  border-bottom:2px solid transparent;
+}
+.analysis-nav a:hover{color:var(--text)}
+.analysis-nav a.active{color:var(--verm-200);border-bottom-color:var(--verm-600)}
+
+.page{padding:0 20px;max-width:820px;margin:0 auto}
+
+.section-title{
+  font-size:9px;font-family:var(--font-ui);letter-spacing:.32em;
+  color:var(--metal);text-transform:uppercase;margin-bottom:12px;
+}
+
+.load-card{border:1px solid var(--rule);padding:18px;margin-bottom:18px;margin-top:18px}
+.load-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.load-row:last-of-type{margin-bottom:0}
+.load-status{font-size:11px;font-family:var(--font-mono);color:var(--text-50);flex:1}
+.dot{display:inline-block;width:6px;height:6px;margin-right:6px;vertical-align:middle}
+.dot-ok{background:var(--verm-400)}
+.dot-warn{background:var(--metal)}
+.dot-err{background:var(--verm-600)}
+
+/* ---------- period selector ---------- */
+.period-row{padding:0 0 18px;display:flex;gap:6px;align-items:center}
+.period-lbl{font-size:10px;font-family:var(--font-mono);color:var(--muted);letter-spacing:.1em;white-space:nowrap}
+.period-btns{display:flex;gap:4px;flex:1}
+.period-btn{
+  flex:1;padding:9px 4px;font-family:var(--font-ui);font-weight:500;font-size:11px;
+  letter-spacing:.06em;cursor:pointer;border:1px solid var(--rule-strong);
+  background:transparent;color:var(--text-70);
+}
+.period-btn.active{border-color:rgba(160,54,16,.6);background:var(--verm-600);color:#fdf1ea}
+
+.analysis-card{border:1px solid var(--rule);padding:18px;margin-bottom:14px}
+.card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.card-title{font-family:var(--font-ui);font-weight:500;font-size:15px;letter-spacing:.01em;color:var(--text)}
+.card-badge{
+  font-size:8px;font-family:var(--font-ui);letter-spacing:.18em;text-transform:uppercase;
+  padding:4px 9px;border:1px solid rgba(160,54,16,.4);color:var(--verm-200);
+  white-space:nowrap;margin-left:10px;flex-shrink:0;
+}
+.card-science{
+  font-size:10px;font-family:var(--font-mono);color:var(--text-45);line-height:1.6;
+  margin-bottom:16px;border-left:1px solid var(--verm-700);padding-left:10px;
+}
+.chart-wrap{position:relative;height:210px}
+
+/* ---------- log table ---------- */
+.log-table-wrap{border:1px solid var(--rule);overflow-x:auto}
+table.log-table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:10.5px;white-space:nowrap}
+table.log-table th{
+  text-align:left;padding:10px 12px;color:var(--metal);font-family:var(--font-ui);
+  font-size:9px;letter-spacing:.18em;text-transform:uppercase;border-bottom:1px solid var(--rule);
+}
+table.log-table td{padding:9px 12px;color:var(--text-70);border-top:1px solid var(--rule-soft)}
+table.log-table tr:first-child td{border-top:0}
+
+.placeholder{
+  font-size:10px;font-family:var(--font-mono);color:var(--text-40);text-align:center;
+  padding:40px 16px;line-height:1.7;border:1px solid var(--rule-soft);
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">SPORT · INTERVALS.ICU</div>
+    <div class="header-sub">Treeningkoormus</div>
+  </div>
+  <a href="index.html" class="back-btn">← Tagasi</a>
+</div>
+
+<div class="analysis-nav">
+  <a href="index.html">Logi</a>
+  <a href="nutrition-analysis.html">Toitumine</a>
+  <a href="sport-analysis.html" class="active">Sport</a>
+</div>
+
+<div class="page">
+
+  <div class="load-card">
+    <div class="section-title" style="margin-bottom:12px">Andmete laadimine</div>
+    <div class="load-row" style="margin-bottom:0">
+      <div class="load-status" id="intervals-status"><span class="dot dot-warn"></span>Laadimata</div>
+    </div>
+  </div>
+
+  <div class="period-row">
+    <span class="period-lbl">PERIOOD:</span>
+    <div class="period-btns" id="period-btns">
+      <button class="period-btn" data-days="30">30p</button>
+      <button class="period-btn" data-days="60">60p</button>
+      <button class="period-btn active" data-days="90">90p</button>
+      <button class="period-btn" data-days="180">180p</button>
+    </div>
+  </div>
+
+  <div id="content-section" style="display:none">
+
+    <div class="analysis-card">
+      <div class="card-header">
+        <div class="card-title">📈 Treeningkoormuse trend</div>
+        <div class="card-badge">CTL · ATL · FORM</div>
+      </div>
+      <div class="card-science">
+        CTL (fitness, pikaajaline koormus) ja ATL (fatigue, lühiajaline koormus) — Form = CTL − ATL näitab, kas oled hetkel värske (positiivne) või väsimus koguneb (negatiivne).
+      </div>
+      <div class="chart-wrap"><canvas id="chart-ctl-atl"></canvas></div>
+    </div>
+
+    <div class="analysis-card">
+      <div class="card-header">
+        <div class="card-title">🏃 Aladepõhine koormus</div>
+        <div class="card-badge">VIIMASED 4 NÄDALAT</div>
+      </div>
+      <div class="card-science">
+        Treeningkoormus (icu_training_load) alade kaupa, nädalate lõikes. Triatloni ettevalmistuseks oluline näha, kas alad on tasakaalus.
+      </div>
+      <div class="chart-wrap"><canvas id="chart-by-type"></canvas></div>
+    </div>
+
+    <div class="analysis-card">
+      <div class="card-header">
+        <div class="card-title">📋 Treeningute logi</div>
+      </div>
+      <div class="log-table-wrap">
+        <table class="log-table">
+          <thead>
+            <tr><th>Kuupäev</th><th>Ala</th><th>Kestus</th><th>Load</th></tr>
+          </thead>
+          <tbody id="log-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="placeholder" id="empty-state">
+    Andmeid ei leitud. Kontrolli, et Intervals.icu sünkroniseerimine (cron) on käivitunud.
+  </div>
+
+</div>
+
+<script>
+const SERVER = 'https://mosserver.tail34ce94.ts.net';
+
+let activePeriod = 90;
+const charts = {};
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+function makeChart(id, config) {
+  destroyChart(id);
+  charts[id] = new Chart(document.getElementById(id).getContext('2d'), config);
+}
+
+Chart.defaults.color = 'rgba(230,233,234,0.4)';
+Chart.defaults.borderColor = 'rgba(154,160,163,0.16)';
+Chart.defaults.font.family = "'Space Mono', monospace";
+Chart.defaults.font.size = 9;
+
+const BASE_OPTIONS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { labels: { color: 'rgba(230,233,234,0.5)', boxWidth: 10, font: { size: 9 } } },
+    tooltip: { bodyFont: { size: 10 }, titleFont: { size: 9 } }
+  },
+  scales: {
+    x: { grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: 'rgba(230,233,234,0.4)' } },
+    y: { grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: 'rgba(230,233,234,0.5)' } }
+  }
+};
+
+function fmtDate(iso) {
+  const [, m, d] = iso.split('-');
+  return parseInt(d) + '.' + parseInt(m);
+}
+
+function fmtDuration(sec) {
+  if (sec == null) return '—';
+  const h = Math.floor(sec / 3600);
+  const m = Math.round((sec % 3600) / 60);
+  return h > 0 ? `${h}h ${m}min` : `${m}min`;
+}
+
+const TYPE_COLORS = {
+  Run:        { bg: 'rgba(201,106,58,0.5)',  border: '#c96a3a' },
+  Ride:       { bg: 'rgba(138,44,12,0.5)',   border: '#8a2c0c' },
+  Badminton:  { bg: 'rgba(224,161,127,0.5)', border: '#e0a17f' },
+  Padel:      { bg: 'rgba(154,160,163,0.5)', border: '#9aa0a3' },
+};
+function colorFor(type, i) {
+  if (TYPE_COLORS[type]) return TYPE_COLORS[type];
+  const palette = ['rgba(160,54,16,0.5)', 'rgba(230,233,234,0.35)', 'rgba(242,201,178,0.5)'];
+  const c = palette[i % palette.length];
+  return { bg: c, border: c.replace(/[\d.]+\)$/, '1)') };
+}
+
+function renderCtlAtlChart(wellness) {
+  const labels = wellness.map(w => fmtDate(w.date));
+  makeChart('chart-ctl-atl', {
+    data: {
+      labels,
+      datasets: [
+        { type: 'line', label: 'CTL (fitness)', data: wellness.map(w => w.ctl), borderColor: '#c96a3a', borderWidth: 2, pointRadius: 0, tension: 0.25 },
+        { type: 'line', label: 'ATL (fatigue)', data: wellness.map(w => w.atl), borderColor: '#9aa0a3', borderWidth: 2, pointRadius: 0, tension: 0.25 },
+        { type: 'line', label: 'Form', data: wellness.map(w => w.form), borderColor: '#a03610', borderWidth: 1.5, pointRadius: 0, tension: 0.25, borderDash: [4, 3], yAxisID: 'y2' },
+      ]
+    },
+    options: {
+      ...BASE_OPTIONS,
+      scales: {
+        x: { grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: 'rgba(230,233,234,0.4)', maxTicksLimit: 12 } },
+        y: { grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: 'rgba(230,233,234,0.5)' } },
+        y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#a03610' } },
+      }
+    }
+  });
+}
+
+function renderByTypeChart(activities) {
+  const today = new Date();
+  const buckets = [3, 2, 1, 0].map(weeksAgo => ({ weeksAgo, byType: {} }));
+  const types = new Set();
+
+  activities.forEach(a => {
+    const d = new Date(a.date + 'T00:00:00');
+    const daysAgo = Math.floor((today - d) / 86400000);
+    if (daysAgo < 0 || daysAgo >= 28) return;
+    const weeksAgo = Math.floor(daysAgo / 7);
+    const bucket = buckets.find(b => b.weeksAgo === weeksAgo);
+    if (!bucket) return;
+    const type = a.type || 'Muu';
+    types.add(type);
+    bucket.byType[type] = (bucket.byType[type] || 0) + (a.load || 0);
+  });
+
+  const labels = buckets.map(b => b.weeksAgo === 0 ? 'See nädal' : `-${b.weeksAgo} näd`);
+  const datasets = Array.from(types).map((type, i) => {
+    const c = colorFor(type, i);
+    return {
+      label: type,
+      data: buckets.map(b => Math.round((b.byType[type] || 0) * 10) / 10),
+      backgroundColor: c.bg,
+      borderColor: c.border,
+      borderWidth: 1,
+    };
+  });
+
+  makeChart('chart-by-type', {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      ...BASE_OPTIONS,
+      scales: {
+        x: { stacked: true, grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: 'rgba(230,233,234,0.4)' } },
+        y: { stacked: true, grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: 'rgba(230,233,234,0.5)' } },
+      }
+    }
+  });
+}
+
+function renderLogTable(activities) {
+  const tbody = document.getElementById('log-tbody');
+  const sorted = [...activities].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 25);
+  tbody.innerHTML = sorted.map(a => `
+    <tr>
+      <td>${fmtDate(a.date)}</td>
+      <td>${a.type || '—'}</td>
+      <td>${fmtDuration(a.duration)}</td>
+      <td>${a.load != null ? Math.round(a.load) : '—'}</td>
+    </tr>
+  `).join('');
+}
+
+async function loadData() {
+  const statusEl = document.getElementById('intervals-status');
+  statusEl.innerHTML = `<span class="dot dot-warn"></span>Laen serverist...`;
+
+  try {
+    const [wellnessResp, activitiesResp] = await Promise.all([
+      fetch(SERVER + '/intervals/wellness?days=' + activePeriod),
+      fetch(SERVER + '/intervals/activities?days=' + activePeriod),
+    ]);
+    if (!wellnessResp.ok || !activitiesResp.ok) throw new Error('HTTP viga');
+
+    const wellness = await wellnessResp.json();
+    const activities = await activitiesResp.json();
+
+    if (!wellness.length && !activities.length) {
+      document.getElementById('content-section').style.display = 'none';
+      document.getElementById('empty-state').style.display = 'block';
+      statusEl.innerHTML = `<span class="dot dot-warn"></span>Andmeid pole veel — oota järgmist cron käivitust (06:10)`;
+      return;
+    }
+
+    document.getElementById('content-section').style.display = 'block';
+    document.getElementById('empty-state').style.display = 'none';
+    statusEl.innerHTML = `<span class="dot dot-ok"></span>${wellness.length}p koormust · ${activities.length} treeningut`;
+
+    renderCtlAtlChart(wellness);
+    renderByTypeChart(activities);
+    renderLogTable(activities);
+  } catch (e) {
+    statusEl.innerHTML = `<span class="dot dot-err"></span>Serveri viga: ${e.message}`;
+  }
+}
+
+document.getElementById('period-btns').addEventListener('click', (e) => {
+  const btn = e.target.closest('.period-btn');
+  if (!btn) return;
+  activePeriod = parseInt(btn.dataset.days);
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.toggle('active', b === btn));
+  loadData();
+});
+
+loadData();
+</script>
+
+</body>
+</html>
