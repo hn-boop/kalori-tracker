@@ -251,7 +251,20 @@ hr.divider{border:none;border-top:1px solid var(--rule);margin:18px 0}
     <div class="header-title">KALORI & VESI</div>
     <div class="header-date" id="header-date"></div>
   </div>
+  <div class="header-nav">
+    <button class="nav-btn" onclick="toggleAiSummary()" title="Päeva kokkuvõte">💬</button>
+  </div>
 </div>
+
+<!-- AI SUMMARY POPUP -->
+<div id="ai-summary-popup" style="display:none;position:fixed;top:70px;right:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;z-index:300;width:280px;max-width:calc(100vw - 32px);box-shadow:0 8px 32px rgba(0,0,0,0.4)">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:0.14em;text-transform:uppercase">Päeva kokkuvõte</div>
+    <button onclick="toggleAiSummary()" style="background:none;border:none;color:var(--text-50);font-size:14px;cursor:pointer;padding:0;line-height:1">✕</button>
+  </div>
+  <div id="ai-summary-body" style="font-size:12.5px;font-family:'Jost',sans-serif;color:var(--text);line-height:1.55;white-space:pre-wrap">Mõtlen...</div>
+</div>
+<div id="ai-summary-backdrop" onclick="toggleAiSummary()" style="display:none;position:fixed;inset:0;z-index:299"></div>
 
 <!-- COST POPUP -->
 <div id="cost-popup" style="display:none;position:fixed;top:70px;right:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;z-index:300;min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,0.4)">
@@ -707,6 +720,119 @@ function saveLog(k,l) {
 
 function getSettings() { try { return JSON.parse(localStorage.getItem('kv_settings')||'{}'); } catch { return {}; } }
 function saveSettings(s) { localStorage.setItem('kv_settings', JSON.stringify(s)); }
+
+// ── AI PÄEVA KOKKUVÕTE ───────────────────────────────────────────────────────
+function getAiSummaryCache() { try { return JSON.parse(localStorage.getItem('kv_ai_summary')||'null'); } catch { return null; } }
+function setAiSummaryCache(obj) { localStorage.setItem('kv_ai_summary', JSON.stringify(obj)); }
+
+function toggleAiSummary() {
+  const popup = document.getElementById('ai-summary-popup');
+  const backdrop = document.getElementById('ai-summary-backdrop');
+  const visible = popup.style.display !== 'none';
+  if (!visible) {
+    const cache = getAiSummaryCache();
+    if (cache && cache.date === getTodayKey() && cache.text) {
+      document.getElementById('ai-summary-body').textContent = cache.text;
+    } else {
+      generateAiSummary();
+    }
+  }
+  popup.style.display = visible ? 'none' : 'block';
+  backdrop.style.display = visible ? 'none' : 'block';
+}
+
+async function generateAiSummary() {
+  const bodyEl = document.getElementById('ai-summary-body');
+  const s = getSettings();
+  if (!s.apiKey) {
+    bodyEl.textContent = 'Lisa API võti Seadetes, et päeva kokkuvõtet näha.';
+    return;
+  }
+  bodyEl.textContent = 'Mõtlen...';
+
+  try {
+    // Toitumine — viimased 5 päeva (kohalik logi)
+    const days = Array.from({length: 5}, (_, i) => {
+      const d = new Date(); d.setDate(d.getDate() - (4 - i));
+      return d.toISOString().slice(0, 10);
+    });
+    const nutrition = days.map(d => {
+      const log = getLog(d);
+      let kcal = 0, protein = 0, carbs = 0, fat = 0, water = 0;
+      log.forEach(item => {
+        if (item.type === 'food') { kcal += item.kcal || 0; protein += item.protein || 0; carbs += item.carbs || 0; fat += item.fat || 0; }
+        if (item.type === 'water') water += item.ml || 0;
+      });
+      return { date: d, kcal: Math.round(kcal), protein: Math.round(protein), carbs: Math.round(carbs), fat: Math.round(fat), water };
+    }).filter(d => d.kcal > 0 || d.water > 0);
+
+    // Garmin (uni, sammud, treeningvalmidus) — serverist
+    let garmin = null;
+    try {
+      const r = await fetch(SERVER + '/sync');
+      if (r.ok) {
+        const data = await r.json();
+        const g = data.garmin_data || {};
+        const toArr = v => Array.isArray(v) ? v : Object.values(v || {});
+        garmin = {
+          steps: toArr(g.uds).slice(-5).map(u => ({ date: u.calendarDate, steps: u.totalSteps, restingHR: u.restingHeartRate })),
+          sleep: toArr(g.sleep).slice(-5).map(sl => ({ date: sl.calendarDate, score: (sl.sleepScores || {}).overallScore })),
+          readiness: toArr(g.readiness).slice(-5).map(rd => ({ date: rd.calendarDate, score: rd.score })),
+        };
+      }
+    } catch {}
+
+    // Sport (Intervals.icu CTL/ATL/Form + treeningud) — serverist
+    let sport = null;
+    try {
+      const [wR, aR] = await Promise.all([
+        fetch(SERVER + '/intervals/wellness?days=14'),
+        fetch(SERVER + '/intervals/activities?days=14'),
+      ]);
+      if (wR.ok && aR.ok) {
+        const wellness = await wR.json();
+        const activities = await aR.json();
+        const latest = wellness[wellness.length - 1] || {};
+        sport = {
+          latestCtl: latest.ctl, latestAtl: latest.atl, latestForm: latest.form,
+          recentActivities: activities.slice(-7).map(a => ({ date: a.date, type: a.type, load: a.load, duration: a.duration })),
+        };
+      }
+    } catch {}
+
+    const payload = { nutrition, garmin, sport };
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': s.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 350,
+        messages: [{role: 'user', content: [
+          {type: 'text', text: `Sa oled personaalne treening- ja toitumisassistent. Siin on kasutaja viimaste päevade andmed (toitumine, uni, Garmini näitajad, Intervals.icu treeningkoormus CTL/ATL/Form) JSON-ina:
+
+${JSON.stringify(payload)}
+
+Kirjuta LÜHIKE (max 100 sõna) eestikeelne kokkuvõte tänasest vormist ja 2-3 konkreetset soovitust (treening + toitumine). Kirjuta tavateksti lühikeste lõikudena, ilma markdown pealkirjadeta. Kui mõni andmestik puudub, jäta see lihtsalt kõrvale, ära maini puudumist.`}
+        ]}]
+      })
+    });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message || 'API viga');
+    if (data.usage) trackTokens(data.usage.input_tokens || 0, data.usage.output_tokens || 0);
+    const text = data.content.map(c => c.text || '').join('').trim();
+
+    setAiSummaryCache({ date: getTodayKey(), text });
+    bodyEl.textContent = text;
+  } catch (err) {
+    bodyEl.textContent = '❌ Viga: ' + (err.message || 'API ei vastanud');
+  }
+}
 
 // ── TABS ───────────────────────────────────────────────────────────────────
 function switchTab(tab) {
