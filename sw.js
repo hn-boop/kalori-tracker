@@ -1,7 +1,7 @@
-/* Kalori & Vesi — service worker
+/* Kcal+H2O — service worker
    Strateegia: same-origin GET -> stale-while-revalidate (kiire avamine + offline).
    Kõik muu (fondid, CDN, Tailscale'i sync-server) läheb otse võrku, puutumata. */
-const VERSION = 'kv-2026-09-09';
+const VERSION = 'kv-2026-09-09b';
 const SHELL = [
   './',
   './index.html',
