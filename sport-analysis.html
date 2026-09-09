@@ -213,7 +213,8 @@ table.log-table tr:first-child td{border-top:0}
         <div class="card-badge">CTL · ATL · FORM</div>
       </div>
       <div class="card-science">
-        CTL (fitness, pikaajaline koormus) ja ATL (fatigue, lühiajaline koormus) — Form = CTL − ATL näitab, kas oled hetkel värske (positiivne) või väsimus koguneb (negatiivne).
+        CTL (fitness, pikaajaline koormus) ja ATL (fatigue, lühiajaline koormus) — Form = CTL − ATL näitab, kas oled hetkel värske (positiivne) või väsimus koguneb (negatiivne).<br>
+        Oranž joon = CTL, hall joon = ATL, tumepunane katkendjoon = Form (parem telg).
       </div>
       <div class="chart-wrap"><canvas id="chart-ctl-atl"></canvas></div>
     </div>
@@ -316,7 +317,7 @@ function renderCtlAtlChart(wellness) {
       datasets: [
         { type: 'line', label: 'CTL (fitness)', data: wellness.map(w => w.ctl), borderColor: '#c96a3a', borderWidth: 2, pointRadius: 0, tension: 0.25 },
         { type: 'line', label: 'ATL (fatigue)', data: wellness.map(w => w.atl), borderColor: '#9aa0a3', borderWidth: 2, pointRadius: 0, tension: 0.25 },
-        { type: 'line', label: 'Form', data: wellness.map(w => w.form), borderColor: '#a03610', borderWidth: 1.5, pointRadius: 0, tension: 0.25, borderDash: [4, 3], yAxisID: 'y2' },
+        { type: 'line', label: 'Form', data: wellness.map(w => w.form), borderColor: '#8a2c0c', borderWidth: 1.5, pointRadius: 0, tension: 0.25, borderDash: [4, 3], yAxisID: 'y2' },
       ]
     },
     options: {
@@ -324,7 +325,7 @@ function renderCtlAtlChart(wellness) {
       scales: {
         x: { grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: 'rgba(230,233,234,0.4)', maxTicksLimit: 12 } },
         y: { grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: 'rgba(230,233,234,0.5)' } },
-        y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#a03610' } },
+        y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#8a2c0c' } },
       }
     }
   });

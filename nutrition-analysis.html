@@ -278,7 +278,7 @@ body > *{position:relative;z-index:1}
         <div class="card-badge">ALUS</div>
       </div>
       <div class="card-science">
-        Söödud vs põletatud kalorid päevas. Rohelised tulbad = söödud, oranžid = Garmin põletatud (BMR + aktiivsus). Sinine joon = bilanss (defitsiit / ülejääk).
+        Söödud vs põletatud kalorid päevas. Heleoranžid tulbad = söödud, tumepunased = Garmin põletatud (BMR + aktiivsus). Hall katkendjoon = bilanss (defitsiit / ülejääk).
       </div>
       <div class="chart-wrap"><canvas id="chart-balance"></canvas></div>
     </div>
@@ -289,7 +289,7 @@ body > *{position:relative;z-index:1}
         <div class="card-badge">LEPTIIN · GRELIIN</div>
       </div>
       <div class="card-science">
-        Kehv uni langetab leptiini (küllastustunne↓) ja tõstab greliini (nälg↑). Meta-analüüsid: lühike uni → ca +300–500 kcal järgmisel päeval (Hogenkamp et al., 2013; Spiegel et al., 2004). Siin: eelmise öö une skoor (sinine joon) vs järgmise päeva söödud kalorid (rohelised tulbad).
+        Kehv uni langetab leptiini (küllastustunne↓) ja tõstab greliini (nälg↑). Meta-analüüsid: lühike uni → ca +300–500 kcal järgmisel päeval (Hogenkamp et al., 2013; Spiegel et al., 2004). Siin: eelmise öö une skoor (oranž joon) vs järgmise päeva söödud kalorid (hallid tulbad).
       </div>
       <div class="chart-wrap"><canvas id="chart-sleep-food"></canvas></div>
     </div>
@@ -300,7 +300,7 @@ body > *{position:relative;z-index:1}
         <div class="card-badge">TRÜPTOFAAN · KIUDAINED</div>
       </div>
       <div class="card-science">
-        Valk sisaldab trüptofaani → serotoniin → melatoniin → kiirem uinumine. Kõrge kiudainete tarbimine korreleerub rohkema sügava unega (Grandner et al., 2015). Siin: päeva valk (oranž) + kiudained (roheline) vs sama öö une skoor (sinine joon).
+        Valk sisaldab trüptofaani → serotoniin → melatoniin → kiirem uinumine. Kõrge kiudainete tarbimine korreleerub rohkema sügava unega (Grandner et al., 2015). Siin: päeva valk (tumepunane tulp) + kiudained (hall tulp) vs sama öö une skoor (oranž joon).
       </div>
       <div class="chart-wrap"><canvas id="chart-food-sleep"></canvas></div>
     </div>
@@ -311,7 +311,7 @@ body > *{position:relative;z-index:1}
         <div class="card-badge">GLÜKOGEEN · HRV</div>
       </div>
       <div class="card-science">
-        Garmin Training Readiness skoor põhineb HRV-l, unel ja treeningkoormusel. Süsivesikud taastavad glükogeeni (~1g/kg KK pärast trenni), valk toetab lihaste taastumist. Siin: eelmise päeva valk (oranž) + süsivesikud (sinine) vs järgmise päeva readiness skoor (roheline joon).
+        Garmin Training Readiness skoor põhineb HRV-l, unel ja treeningkoormusel. Süsivesikud taastavad glükogeeni (~1g/kg KK pärast trenni), valk toetab lihaste taastumist. Siin: eelmise päeva valk (tumepunane tulp) + süsivesikud (hall tulp) vs järgmise päeva readiness skoor (oranž joon).
       </div>
       <div class="chart-wrap"><canvas id="chart-recovery"></canvas></div>
     </div>
@@ -322,7 +322,7 @@ body > *{position:relative;z-index:1}
         <div class="card-badge">METABOOLNE STRESS</div>
       </div>
       <div class="card-science">
-        Suur defitsiit (&gt;700 kcal) tõstab kortisooliitaset → puhkepulss ↑, HRV ↓. Punane = defitsiit, roheline = ülejääk. Punane joon = järgmise hommiku puhkepulss.
+        Suur defitsiit (&gt;700 kcal) tõstab kortisooliitaset → puhkepulss ↑, HRV ↓. Tumepunased tulbad = defitsiit, heleoranžid = ülejääk. Oranž joon = järgmise hommiku puhkepulss.
       </div>
       <div class="chart-wrap"><canvas id="chart-hr"></canvas></div>
     </div>
@@ -333,7 +333,7 @@ body > *{position:relative;z-index:1}
         <div class="card-badge">DEHÜDRATATSIOON</div>
       </div>
       <div class="card-science">
-        Isegi 1–2% kehakaalust veepuudus → tähelepanu↓, stressimarkerid↑, Garmin stressiskoor↑ (Armstrong et al., 2012). Siin: joodud vesi ml (sinised tulbad) vs Garmin päevane stressiskoor (punane joon, madalam = parem).
+        Isegi 1–2% kehakaalust veepuudus → tähelepanu↓, stressimarkerid↑, Garmin stressiskoor↑ (Armstrong et al., 2012). Siin: joodud vesi ml (hallid tulbad) vs Garmin päevane stressiskoor (oranž joon, madalam = parem).
       </div>
       <div class="chart-wrap"><canvas id="chart-water-stress"></canvas></div>
     </div>
@@ -609,9 +609,9 @@ function renderBalanceChart() {
     data: {
       labels: DAY_LABELS,
       datasets: [
-        { type: 'bar', label: 'Söödud kcal', data: kcalIn, backgroundColor: 'rgba(201,106,58,0.35)', borderColor: '#c96a3a', borderWidth: 1 },
+        { type: 'bar', label: 'Söödud kcal', data: kcalIn, backgroundColor: 'rgba(224,161,127,0.4)', borderColor: '#e0a17f', borderWidth: 1 },
         { type: 'bar', label: 'Põletatud kcal', data: kcalOut, backgroundColor: 'rgba(138,44,12,0.35)', borderColor: '#8a2c0c', borderWidth: 1 },
-        { type: 'line', label: 'Bilanss', data: balance, borderColor: '#9aa0a3', borderWidth: 2, pointRadius: 3, tension: 0.3, yAxisID: 'y2', backgroundColor: 'transparent' }
+        { type: 'line', label: 'Bilanss', data: balance, borderColor: '#9aa0a3', borderWidth: 2, borderDash: [5, 3], pointRadius: 3, tension: 0.3, yAxisID: 'y2', backgroundColor: 'transparent' }
       ]
     },
     options: {
@@ -637,15 +637,15 @@ function renderSleepFoodChart() {
     data: {
       labels: DAY_LABELS,
       datasets: [
-        { type: 'bar', label: 'Järgmise päeva kcal', data: nextDayKcal, backgroundColor: 'rgba(201,106,58,0.3)', borderColor: '#c96a3a', borderWidth: 1, yAxisID: 'y2' },
-        { type: 'line', label: 'Une skoor', data: sleepScores, borderColor: '#9aa0a3', borderWidth: 2, pointRadius: 3, tension: 0.3, yAxisID: 'y' }
+        { type: 'bar', label: 'Järgmise päeva kcal', data: nextDayKcal, backgroundColor: 'rgba(154,160,163,0.3)', borderColor: '#9aa0a3', borderWidth: 1, yAxisID: 'y2' },
+        { type: 'line', label: 'Une skoor', data: sleepScores, borderColor: '#c96a3a', borderWidth: 2.5, pointRadius: 3, tension: 0.3, yAxisID: 'y' }
       ]
     },
     options: {
       ...BASE_OPTIONS,
       scales: {
         x: { grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: 'rgba(230,233,234,0.4)' } },
-        y: { min: 0, max: 100, grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: '#9aa0a3' } },
+        y: { min: 0, max: 100, grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: '#c96a3a' } },
         y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: 'rgba(230,233,234,0.5)' } }
       }
     }
@@ -663,15 +663,15 @@ function renderFoodSleepChart() {
       labels: DAY_LABELS,
       datasets: [
         { type: 'bar', label: 'Valk g', data: protein, backgroundColor: 'rgba(138,44,12,0.35)', borderColor: '#8a2c0c', borderWidth: 1, yAxisID: 'y2' },
-        { type: 'bar', label: 'Kiudained g', data: fiber, backgroundColor: 'rgba(224,161,127,0.35)', borderColor: '#e0a17f', borderWidth: 1, yAxisID: 'y2' },
-        { type: 'line', label: 'Une skoor', data: sleepScore, borderColor: '#9aa0a3', borderWidth: 2.5, pointRadius: 3, tension: 0.3, yAxisID: 'y' }
+        { type: 'bar', label: 'Kiudained g', data: fiber, backgroundColor: 'rgba(154,160,163,0.3)', borderColor: '#9aa0a3', borderWidth: 1, yAxisID: 'y2' },
+        { type: 'line', label: 'Une skoor', data: sleepScore, borderColor: '#c96a3a', borderWidth: 2.5, pointRadius: 3, tension: 0.3, yAxisID: 'y' }
       ]
     },
     options: {
       ...BASE_OPTIONS,
       scales: {
         x: { grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: 'rgba(230,233,234,0.4)' } },
-        y: { min: 0, max: 100, grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: '#9aa0a3' } },
+        y: { min: 0, max: 100, grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: '#c96a3a' } },
         y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: 'rgba(230,233,234,0.5)' } }
       }
     }
@@ -722,10 +722,10 @@ function renderHRChart() {
     return next ? state.uds[next]?.restingHeartRate : null;
   }));
   const barColors = balance.map(v =>
-    v == null ? 'transparent' : v < 0 ? 'rgba(160,54,16,0.4)' : 'rgba(201,106,58,0.4)'
+    v == null ? 'transparent' : v < 0 ? 'rgba(138,44,12,0.4)' : 'rgba(224,161,127,0.45)'
   );
   const borderColors = balance.map(v =>
-    v == null ? 'transparent' : v < 0 ? '#a03610' : '#c96a3a'
+    v == null ? 'transparent' : v < 0 ? '#8a2c0c' : '#e0a17f'
   );
 
   makeChart('chart-hr', {
@@ -733,7 +733,7 @@ function renderHRChart() {
       labels: DAY_LABELS,
       datasets: [
         { type: 'bar', label: 'Bilanss kcal', data: balance, backgroundColor: barColors, borderColor: borderColors, borderWidth: 1, yAxisID: 'y' },
-        { type: 'line', label: 'Puhkepulss (järgm. päev)', data: nextDayHR, borderColor: '#a03610', borderWidth: 2, pointRadius: 3, tension: 0.3, yAxisID: 'y2' }
+        { type: 'line', label: 'Puhkepulss (järgm. päev)', data: nextDayHR, borderColor: '#c96a3a', borderWidth: 2, pointRadius: 3, tension: 0.3, yAxisID: 'y2' }
       ]
     },
     options: {
@@ -741,7 +741,7 @@ function renderHRChart() {
       scales: {
         x: { grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: 'rgba(230,233,234,0.4)' } },
         y: { grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: 'rgba(230,233,234,0.5)' } },
-        y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#a03610' } }
+        y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#c96a3a' } }
       }
     }
   });
@@ -762,14 +762,14 @@ function renderWaterStressChart() {
       labels: DAY_LABELS,
       datasets: [
         { type: 'bar', label: 'Vesi ml', data: water, backgroundColor: 'rgba(154,160,163,0.35)', borderColor: '#9aa0a3', borderWidth: 1, yAxisID: 'y2' },
-        { type: 'line', label: 'Stressitase (madalam = parem)', data: stress, borderColor: '#a03610', borderWidth: 2, pointRadius: 3, tension: 0.3, yAxisID: 'y' }
+        { type: 'line', label: 'Stressitase (madalam = parem)', data: stress, borderColor: '#c96a3a', borderWidth: 2, pointRadius: 3, tension: 0.3, yAxisID: 'y' }
       ]
     },
     options: {
       ...BASE_OPTIONS,
       scales: {
         x: { grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: 'rgba(230,233,234,0.4)' } },
-        y: { min: 0, max: 100, grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: '#a03610' } },
+        y: { min: 0, max: 100, grid: { color: 'rgba(154,160,163,0.10)' }, ticks: { color: '#c96a3a' } },
         y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#9aa0a3' } }
       }
     }
