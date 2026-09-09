@@ -630,6 +630,12 @@ hr.divider{border:none;border-top:1px solid var(--rule);margin:18px 0}
       Loo võti: <span style="color:var(--accent2)">console.anthropic.com</span>
     </div>
     <hr class="divider">
+    <div class="apikey-lbl">ANDMED</div>
+    <button onclick="syncFromServer(true)" style="width:100%;background:rgba(201,106,58,0.05);border:1px solid rgba(201,106,58,0.2);color:var(--accent);padding:12px;font-family:'Jost',sans-serif;font-weight:700;font-size:14px;cursor:pointer;text-align:center;margin-top:4px">☁ Taasta ajalugu serverist</button>
+    <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;padding:6px 4px 0;line-height:1.6;margin-bottom:16px">
+      Tõmbab serverist päevad, mida telefonis pole. Olemasolevaid kirjeid ei muuda. Nõuab Tailscale't.
+    </div>
+    <hr class="divider">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div class="apikey-lbl" style="margin-bottom:0">EESMÄRGID</div>
       <button onclick="toggleGoalsEdit()" id="goals-edit-toggle" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px">✏️</button>
@@ -730,6 +736,36 @@ function syncToServer(k, l) {
 function saveLog(k,l) {
   localStorage.setItem('log_'+k, JSON.stringify(l));
   syncToServer(k, l);
+}
+
+function hasLocalHistory() {
+  return Object.keys(localStorage).some(k => /^log_\d{4}-\d{2}-\d{2}$/.test(k));
+}
+
+// Tõmba logid serverist tagasi. Kirjutab üle ainult need päevad, mida
+// kohapeal pole (või on lühemad) — olemasolevat kohalikku logi ei riku.
+async function syncFromServer(manual) {
+  try {
+    const r = await fetch(SERVER + '/sync', { cache: 'no-store' });
+    if (!r.ok) throw new Error('server ' + r.status);
+    const data = await r.json();
+    const keys = Object.keys(data).filter(k => /^log_\d{4}-\d{2}-\d{2}$/.test(k));
+    let restored = 0;
+    for (const k of keys) {
+      const remote = data[k];
+      if (!Array.isArray(remote) || !remote.length) continue;
+      let local; try { local = JSON.parse(localStorage.getItem(k) || '[]'); } catch { local = []; }
+      if (local.length >= remote.length) continue;
+      localStorage.setItem(k, JSON.stringify(remote));
+      restored++;
+    }
+    if (manual) toast(restored ? ('✓ Taastatud ' + restored + ' päeva') : 'Kõik on juba sünkroonis');
+    if (restored) render();
+    return restored;
+  } catch (e) {
+    if (manual) toast('⚠️ Server pole ligi (Tailscale?)');
+    return -1;
+  }
 }
 
 function getSettings() { try { return JSON.parse(localStorage.getItem('kv_settings')||'{}'); } catch { return {}; } }
@@ -1641,6 +1677,9 @@ function toast(msg) {
 
 render();
 updateCostBtn();
+
+// Pärast äpi taasinstalli / uut seadet: kui kohalikku ajalugu pole, proovi serverist
+if (!hasLocalHistory()) syncFromServer(false);
 </script>
 
 </body>
